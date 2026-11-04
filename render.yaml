@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: cloudgod-goes19-bt
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./backend/Dockerfile
+    healthCheckPath: /
+    envVars:
+      - key: BT_WIDTH
+        value: "1500"
+      - key: BT_HEIGHT
+        value: "1540"
+      - key: BT_CACHE_SECONDS
+        value: "240"
