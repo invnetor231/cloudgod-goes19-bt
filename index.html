@@ -398,23 +398,23 @@ header{padding:0 12px}
 <div><strong>TEMPERATURA DE BRILHO (BT)</strong><small>GOES-19 ABI C13 · referência Color Enhanced · 10,3 µm</small></div><div class="dot"></div>
 </div>
 
-<div id="btColorLegend" class="bt-legend" aria-label="Tabela de cores de referência da temperatura de brilho">
-<h4>LEGENDA BT · COLOR ENHANCED</h4>
+<div id="btColorLegend" class="bt-legend" aria-label="Tabela de cores da temperatura de brilho">
+<h4>LEGENDA BT · PALETA CLOUDGOD / COLOR ENHANCED</h4>
 <table class="bt-table">
 <tbody>
-<tr><td><span class="bt-swatch" style="background:#282828"></span></td><td>Acima de −10 °C</td><td>Superfície / nuvens quentes</td></tr>
-<tr><td><span class="bt-swatch" style="background:#777777"></span></td><td>−10 a −20 °C</td><td>Topo de nuvem frio</td></tr>
-<tr><td><span class="bt-swatch" style="background:#2457a6"></span></td><td>−20 a −30 °C</td><td>Nuvens frias</td></tr>
-<tr><td><span class="bt-swatch" style="background:#20a9d6"></span></td><td>−30 a −40 °C</td><td>Resfriamento acentuado</td></tr>
-<tr><td><span class="bt-swatch" style="background:#35b86b"></span></td><td>−40 a −50 °C</td><td>Convecção profunda</td></tr>
-<tr><td><span class="bt-swatch" style="background:#d5df35"></span></td><td>−50 a −60 °C</td><td>Topos muito frios</td></tr>
-<tr><td><span class="bt-swatch" style="background:#f39a25"></span></td><td>−60 a −70 °C</td><td>Convecção intensa</td></tr>
-<tr><td><span class="bt-swatch" style="background:#df3434"></span></td><td>−70 a −80 °C</td><td>Topos extremamente frios</td></tr>
-<tr><td><span class="bt-swatch" style="background:#c12b9a"></span></td><td>−80 a −90 °C</td><td>Valores muito baixos</td></tr>
-<tr><td><span class="bt-swatch" style="background:#f5f5f5"></span></td><td>Abaixo de −90 °C</td><td>Extremo da escala</td></tr>
+<tr><td><span class="bt-swatch" style="background:linear-gradient(90deg,#35b86b,#f39a25,#df3434,#c12b9a,#f5f5f5,#20a9d6,#2457a6,#777777,#282828)"></span></td><td>Acima de −10 °C</td><td>Transição contínua por toda a paleta</td></tr>
+<tr><td><span class="bt-swatch" style="background:#35b86b"></span></td><td>−10 a −20 °C</td><td>Topo de nuvem frio</td></tr>
+<tr><td><span class="bt-swatch" style="background:#f39a25"></span></td><td>−20 a −30 °C</td><td>Nuvens frias</td></tr>
+<tr><td><span class="bt-swatch" style="background:#df3434"></span></td><td>−30 a −40 °C</td><td>Resfriamento acentuado</td></tr>
+<tr><td><span class="bt-swatch" style="background:#c12b9a"></span></td><td>−40 a −50 °C</td><td>Convecção profunda</td></tr>
+<tr><td><span class="bt-swatch" style="background:#f5f5f5"></span></td><td>−50 a −60 °C</td><td>Topos muito frios</td></tr>
+<tr><td><span class="bt-swatch" style="background:#20a9d6"></span></td><td>−60 a −70 °C</td><td>Convecção intensa</td></tr>
+<tr><td><span class="bt-swatch" style="background:#2457a6"></span></td><td>−70 a −80 °C</td><td>Topos extremamente frios</td></tr>
+<tr><td><span class="bt-swatch" style="background:#777777"></span></td><td>−80 a −90 °C</td><td>Valores muito baixos</td></tr>
+<tr><td><span class="bt-swatch" style="background:#282828"></span></td><td>Abaixo de −90 °C</td><td>Extremo da escala</td></tr>
 </tbody>
 </table>
-<div class="bt-note">Escala ilustrativa de referência para o realce Color Enhanced. Os intervalos e cores precisam corresponder à tabela de cores aplicada ao raster BT; a legenda, sozinha, não calibra nem altera os pixels.</div>
+<div class="bt-note">Paleta aplicada aos pixels do raster com BT calibrada do GOES-19 ABI Band 13. As temperaturas são convertidas de Kelvin para °C antes da colorização. Acima de −10 °C, a paleta completa é interpolada continuamente.</div>
 </div>
 
 <div class="info" style="margin:10px 0 12px">Exibindo imagens de todos os radares disponíveis. O ícone 📡 indica a localização de cada estação de radar.</div>
@@ -706,54 +706,59 @@ radarStationGroup.addTo(map);
 // converte CMI para temperatura de brilho em Kelvin e reprojeta
 // a imagem para latitude/longitude antes de servir o PNG.
 // ============================================
-const BT_BACKEND_URL="COLE_A_URL_DO_BACKEND_AQUI";
+const BT_BACKEND_URL="https://cloudgod-goes19-bt.onrender.com";
 const SOUTH_AMERICA_BOUNDS=[[-56.5,-82.0],[13.5,-32.0]];
 let goes13Layer=null;
 let goes13Enabled=false;
 let goes13RefreshTimer=null;
+let btObjectUrl=null;
+let btRequestId=0;
 function btImageUrl(){
- if(!BT_BACKEND_URL||BT_BACKEND_URL.includes("COLE_A_URL")){
-  throw new Error("Backend BT ainda não configurado. Publique a pasta backend e informe a URL em BT_BACKEND_URL.");
- }
  return BT_BACKEND_URL.replace(/\/$/,"")+"/bt.png?t="+Date.now();
 }
-function createGOES13Layer(){
- const url=btImageUrl();
- const layer=L.imageOverlay(url,SOUTH_AMERICA_BOUNDS,{
-  opacity:(Number(document.getElementById("opacity").value)||90)/100,
-  interactive:false,
-  crossOrigin:true,
-  className:"cloudgod-bt-raster"
- });
- layer.on("load",()=>{
-  goes13Enabled=true;
-  document.getElementById("message").textContent="BT GOES-19 carregada · ABI C13 · temperatura calibrada em Kelvin · realce Color Enhanced.";
-  if(!goes13RefreshTimer)goes13RefreshTimer=setInterval(()=>{
-   if(currentProduct==="brightness"&&goes13Layer)refreshGOES13();
-  },5*60*1000);
- });
- layer.on("error",()=>{
-  goes13Enabled=false;
-  document.getElementById("message").textContent="Falha ao obter BT calibrada. Verifique se o backend está publicado e acessível.";
- });
- return layer;
+function btOpacity(){
+ return (Number(document.getElementById("opacity").value)||90)/100;
+}
+function btShowError(message){
+ goes13Enabled=false;
+ const el=document.getElementById("message");
+ if(el)el.textContent="BT GOES-19 indisponível: "+message;
 }
 function refreshGOES13(){
- try{
-  document.getElementById("message").textContent="Buscando o NetCDF mais recente do GOES-19 ABI C13 e calculando temperatura de brilho...";
-  if(!goes13Layer){
-   goes13Layer=createGOES13Layer();
-   goes13Layer.addTo(map);
-  }else{
-   goes13Layer.setUrl(btImageUrl());
-   if(!map.hasLayer(goes13Layer))goes13Layer.addTo(map);
-  }
-  goes13Layer.setOpacity((Number(document.getElementById("opacity").value)||90)/100);
- }catch(error){
-  document.getElementById("message").textContent=error.message;
+ const el=document.getElementById("message");
+ if(el)el.textContent="Carregando raster BT calibrado do backend NOAA GOES-19...";
+ const nextUrl=btImageUrl();
+ if(!goes13Layer){
+  goes13Layer=L.imageOverlay(nextUrl,SOUTH_AMERICA_BOUNDS,{
+   opacity:btOpacity(),interactive:false,
+   // A imagem é carregada pelo próprio elemento <img> do Leaflet.
+   // Isso evita a restrição CORS de fetch()+Blob em hospedagens estáticas.
+   crossOrigin:false
+  });
+  goes13Layer.on("load",()=>{
+   goes13Enabled=true;
+   if(el)el.textContent="BT GOES-19 carregada · ABI C13 · CMI calibrada em Kelvin · Color Enhanced.";
+   if(!goes13RefreshTimer)goes13RefreshTimer=setInterval(()=>{
+    if(currentProduct==="brightness"&&goes13Layer)refreshGOES13();
+   },5*60*1000);
+  });
+  goes13Layer.on("error",async()=>{
+   let detail="o endpoint /bt.png não entregou uma imagem.";
+   try{
+    const response=await fetch(BT_BACKEND_URL.replace(/\/$/,"")+"/bt.json?diag="+Date.now(),{cache:"no-store"});
+    const data=await response.json();
+    if(data&&data.detail)detail+=" Backend: "+data.detail;
+    else if(!response.ok)detail+=" HTTP "+response.status;
+   }catch(err){detail+=" Diagnóstico indisponível: "+(err&&err.message?err.message:String(err));}
+   btShowError(detail);
+  });
+  goes13Layer.addTo(map);
+ }else{
+  goes13Layer.setOpacity(btOpacity());
+  if(!map.hasLayer(goes13Layer))goes13Layer.addTo(map);
+  goes13Layer.setUrl(nextUrl);
  }
 }
-
 // ============================================
 // INDICADOR EXPERIMENTAL DE AMBIENTE FAVORÁVEL A TORNADOS
 // Fonte: Open-Meteo GFS. Não representa probabilidade nem alerta oficial.
