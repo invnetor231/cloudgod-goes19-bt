@@ -1,0 +1,8 @@
+fastapi==0.115.12
+uvicorn[standard]==0.34.0
+boto3==1.37.18
+netCDF4==1.7.2
+numpy==2.2.3
+Pillow==11.1.0
+pyproj==3.7.1
+rasterio==1.4.3
