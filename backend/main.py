@@ -80,63 +80,25 @@ def latest_c13_key():
 
 
 def color_enhanced(bt):
-    """Aplica a paleta BT solicitada, usando temperatura física em Kelvin.
-
-    Faixas frias (°C):
-      -10/-20 verde, -20/-30 laranja, -30/-40 vermelho,
-      -40/-50 roxo, -50/-60 branco, -60/-70 ciano,
-      -70/-80 azul, -80/-90 cinza e abaixo de -90 preto.
-
-    Acima de -10 °C, interpola continuamente pela mesma sequência de cores
-    até 315 K (41,85 °C), sem introduzir uma cor adicional.
-    """
-    # Âncoras em °C. A ordem corresponde à tabela de cores informada.
-    stops_c = np.array([
-        -10.0, -20.0, -30.0, -40.0, -50.0,
-        -60.0, -70.0, -80.0, -90.0,
+    # Realce térmico próprio. A entrada é BT física em Kelvin.
+    stops = np.array([
+        [185.0, 255, 255, 255], [190.0, 245, 190, 255],
+        [195.0, 190, 80, 220], [200.0, 110, 35, 190],
+        [205.0, 55, 35, 160], [210.0, 35, 75, 190],
+        [215.0, 35, 145, 220], [220.0, 45, 200, 210],
+        [225.0, 55, 180, 125], [230.0, 150, 205, 65],
+        [235.0, 235, 220, 55], [240.0, 245, 155, 40],
+        [245.0, 220, 75, 35], [250.0, 170, 35, 45],
+        [260.0, 105, 25, 35], [270.0, 55, 25, 30],
+        [280.0, 30, 25, 30], [290.0, 20, 20, 25],
+        [300.0, 12, 14, 20], [315.0, 5, 8, 12],
     ], dtype=np.float32)
-    colors = np.array([
-        [53, 184, 107],   # verde  #35b86b
-        [243, 154, 37],   # laranja #f39a25
-        [223, 52, 52],    # vermelho #df3434
-        [193, 43, 154],   # roxo #c12b9a
-        [245, 245, 245],  # branco #f5f5f5
-        [32, 169, 214],   # ciano #20a9d6
-        [36, 87, 166],    # azul #2457a6
-        [119, 119, 119],  # cinza #777777
-        [40, 40, 40],     # preto #282828
-    ], dtype=np.float32)
-
-    temp_c = np.asarray(bt, dtype=np.float32) - 273.15
-    # np.interp exige âncoras crescentes; inverter a sequência fria.
-    cold_x = stops_c[::-1]
-    cold_colors = colors[::-1]
-    result = np.empty(temp_c.shape + (3,), dtype=np.float32)
-
-    # Abaixo de -90 °C permanece preto; entre -90 e -10 °C interpola
-    # dentro de cada faixa de 10 °C; -10 °C ou mais usa toda a paleta.
-    flat_t = temp_c.ravel()
-    flat_out = result.reshape(-1, 3)
-    for channel in range(3):
-        flat_out[:, channel] = np.interp(
-            flat_t,
-            cold_x,
-            cold_colors[:, channel],
-            left=colors[-1, channel],
-            right=colors[0, channel],
-        )
-
-    warm = flat_t > -10.0
-    if np.any(warm):
-        # A faixa quente usa todas as cores de forma contínua entre -10 °C
-        # e o limite superior válido de 350 K (76,85 °C).
-        warm_x = np.linspace(-10.0, 350.0 - 273.15, len(colors), dtype=np.float32)
-        for channel in range(3):
-            flat_out[warm, channel] = np.interp(
-                flat_t[warm], warm_x, colors[:, channel]
-            )
-
-    return np.clip(result, 0, 255).astype(np.uint8)
+    values = np.clip(bt, stops[0, 0], stops[-1, 0])
+    rgb = np.stack(
+        [np.interp(values, stops[:, 0], stops[:, channel]) for channel in (1, 2, 3)],
+        axis=-1,
+    )
+    return np.clip(rgb, 0, 255).astype(np.uint8)
 
 
 def make_png():
@@ -273,9 +235,7 @@ def metadata():
             "satellite": "GOES-19", "band": 13, "wavelength_um": 10.3,
             "product": "ABI-L2-CMIPF-M6C13", "variable": "CMI", "units": "K",
             "scan_time": item["scan"], "source_file": item["key"],
-            "enhancement": "CLOUDGOD Weathernerds-inspired 9-color BT palette",
-            "palette_order": ["#35b86b", "#f39a25", "#df3434", "#c12b9a", "#f5f5f5", "#20a9d6", "#2457a6", "#777777", "#282828"],
-            "temperature_scale": "degC",
+            "enhancement": "CLOUDGOD Color Enhanced IR",
             "bounds": SOUTH_AMERICA,
             "image_size": [WIDTH, HEIGHT],
             "cache_age_seconds": round(time.time() - item["at"], 1),
