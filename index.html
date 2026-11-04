@@ -1,0 +1,2063 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#ffffff">
+<title>CLOUDGOD | Radar Meteorológico</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+<style>
+*{box-sizing:border-box}
+html,body{width:100%;min-height:100%;margin:0}
+.map-card{min-width:0}
+.leaflet-container{width:100%;height:100%;font-family:Arial,sans-serif}
+.legend{display:flex;gap:3px;height:12px;margin:8px 0;border-radius:6px;overflow:hidden}
+.legend i{display:block;flex:1}
+.legend-labels{display:flex;justify-content:space-between;font-size:9px;color:#8293a8}
+:root{
+--blue:#1677ff;
+--bg:#f6f9ff;
+--text:#19304b;
+--muted:#8293a8;
+--border:#e8eef5;
+}
+body{
+margin:0;
+background:var(--bg);
+font-family:Arial,sans-serif;
+color:var(--text);
+}
+header{
+height:72px;
+background:#fff;
+border-bottom:1px solid var(--border);
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:0 20px;
+position:relative;
+z-index:1000;
+}
+.brand{display:flex;align-items:center;gap:11px}
+.logo{
+width:43px;height:43px;border-radius:14px;
+background:linear-gradient(140deg,#1677ff,#77c9ff);
+color:white;display:grid;place-items:center;font-size:23px;
+}
+.brand h1{font-size:20px;letter-spacing:1.5px;margin:0}
+.brand small{font-size:9px;color:var(--muted);letter-spacing:1px}
+.status{
+background:#edfaf2;color:#159657;
+border-radius:30px;padding:9px 12px;font-size:10px;font-weight:bold;
+}
+main{max-width:1700px;margin:auto;padding:17px}
+.dashboard{
+display:grid;
+grid-template-columns:minmax(0,1fr) 315px;
+gap:16px;
+}
+.map-card,.panel,.loop{
+background:white;border:1px solid var(--border);
+border-radius:17px;overflow:hidden;
+box-shadow:0 8px 30px #234b7710;
+}
+.map-head{
+height:63px;padding:12px 16px;
+display:flex;align-items:center;justify-content:space-between;
+border-bottom:1px solid var(--border);
+}
+.map-head h2{font-size:14px;margin:0 0 5px}
+.map-head small{font-size:10px;color:var(--muted)}
+button,select{font-family:inherit}
+button{
+border:0;border-radius:9px;padding:11px 13px;
+font-size:11px;font-weight:bold;cursor:pointer;
+transition:.2s;
+}
+button:hover{transform:translateY(-2px)}
+.primary{background:linear-gradient(120deg,#1677ff,#50aaff);color:white}
+.secondary{background:#edf4ff;color:#31659d}
+.danger{background:#fff0f0;color:#d44e4e}
+#map{
+position:relative;
+width:100%;
+height:calc(100vh - 225px);
+min-height:470px;
+background:#eaf2f8;
+}
+.side{display:flex;flex-direction:column;gap:13px}
+.panel{padding:16px}
+.panel h3{font-size:12px;margin:0 0 14px}
+.panel-title{display:flex;justify-content:space-between;align-items:center}
+.panel-title span{font-size:9px;color:var(--muted)}
+.product{
+border:1px solid var(--border);border-radius:11px;
+padding:12px;margin-bottom:8px;
+display:flex;justify-content:space-between;align-items:center;
+cursor:pointer;
+}
+.product.active{background:#eff6ff;border-color:#72afff}
+.product strong{font-size:11px}
+.product small{display:block;color:var(--muted);font-size:9px;margin-top:4px}
+.dot{width:9px;height:9px;background:#cbd7e5;border-radius:50%}
+.product.active .dot{background:var(--blue);box-shadow:0 0 0 4px #1677ff20}
+.bt-legend{display:none;margin:10px 0 12px;padding:11px;border:1px solid var(--border);border-radius:11px;background:#fbfcff}
+.bt-legend.open{display:block}
+.bt-legend h4{font-size:10px;margin:0 0 8px;color:#29415d}
+.bt-table{width:100%;border-collapse:collapse;font-size:9px}
+.bt-table td{padding:5px 4px;border-bottom:1px solid #edf1f6}
+.bt-swatch{width:27px;height:12px;border-radius:3px;display:inline-block;vertical-align:middle;border:1px solid #0001}
+.bt-note{font-size:8px;line-height:1.5;color:#8293a8;margin-top:8px}
+label{font-size:10px;color:#74859a;font-weight:bold;display:block;margin:12px 0 7px}
+select{width:100%;padding:11px;border:1px solid var(--border);border-radius:9px;background:#f8faff;color:#29415d;font-size:11px}
+input[type=range]{width:100%;accent-color:var(--blue)}
+#message{font-size:10px;color:#647b95;line-height:1.6;margin-top:12px;overflow-wrap:anywhere}
+.info{background:#f2f7ff;border-radius:10px;padding:11px;font-size:10px;line-height:1.6;color:#647b95}
+.loop{padding:17px;margin-top:15px}
+.loop-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.loop h3{font-size:13px;margin:0}
+.controls{display:flex;gap:8px;flex-wrap:wrap}
+.controls button{flex:1;min-width:85px}
+.timeline{margin-top:16px;width:100%;accent-color:var(--blue)}
+.timeinfo{display:flex;justify-content:space-between;font-size:10px;color:var(--muted)}
+.options{display:flex;gap:13px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.options label{margin:0;display:flex;gap:5px;align-items:center}
+.options select{width:auto;padding:8px}
+.footer{text-align:center;padding:18px;color:#9aa9b9;font-size:9px}
+
+
+.tornado-risk-marker{border:2px solid #fff;border-radius:50%;box-shadow:0 1px 7px #182b45aa}
+.tornado-risk-label{font: bold 9px Arial,sans-serif;color:#fff;text-shadow:0 1px 3px #000,1px 0 3px #000;text-align:center;white-space:nowrap}
+.radar-station-icon{background:transparent;border:0;text-align:center;font-size:23px;line-height:30px;filter:drop-shadow(0 1px 2px #fff)}
+/* RAIOS E RELÂMPAGOS */
+.lightning-marker{width:27px;height:27px;border-radius:50%;display:grid;place-items:center;border:2px solid #fff;box-shadow:0 1px 7px #182b45aa;font-size:17px;line-height:1;color:#fff}
+.lightning-legend{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:9px;font-size:9px;color:#647b95}
+.lightning-legend span{display:inline-flex;align-items:center;gap:3px}
+.lightning-dot{width:9px;height:9px;border-radius:50%;display:inline-block;border:1px solid #0002}
+.lightning-status{font-size:10px;line-height:1.5;color:#647b95;margin-top:8px}
+
+/* TSC / STSC - ocorrências de tempo severo convectivo */
+.stsc-status{font-size:10px;line-height:1.5;color:#647b95;margin-top:8px;overflow-wrap:anywhere}
+.stsc-controls{display:flex;gap:7px;margin-top:9px}
+.stsc-controls button{flex:1}
+.stsc-meta{display:flex;justify-content:space-between;gap:8px;font-size:9px;color:#71849b;margin-top:7px}
+.stsc-legend{display:flex;gap:10px;flex-wrap:wrap;font-size:9px;color:#647b95;margin-top:8px}
+.stsc-legend span{display:inline-flex;align-items:center;gap:4px}
+.stsc-legend i{width:9px;height:9px;border-radius:50%;display:inline-block}
+
+.radar-station-label{font-size:10px;font-weight:bold;color:#19304b;background:rgba(255,255,255,.9);border:1px solid #dce7f4;border-radius:6px;padding:3px 5px;white-space:nowrap}
+
+/* MEDIÇÃO DE ÁREA */
+.area-card{position:absolute;z-index:850;right:16px;top:83px;width:225px;max-width:calc(100% - 32px);padding:13px;border:1px solid #ffffffc9;border-radius:15px;background:rgba(255,255,255,.84);backdrop-filter:blur(16px);box-shadow:0 8px 30px #193b6020;display:none;pointer-events:none}
+.area-card.visible{display:block}
+.area-card-title{font-size:10px;font-weight:bold;color:#315477}
+.area-card-value{font-size:25px;font-weight:bold;color:#1677ff;margin:5px 0}
+.area-card-value small{font-size:11px;color:#71849b}
+.area-card-detail{font-size:10px;line-height:1.5;color:#647b95}
+.area-measure-tooltip{font-size:10px;font-weight:bold;color:#1457a0}
+
+/* BOTÕES DE MODOS */
+.mode-buttons{
+display:flex;gap:7px;
+}
+.mode-button{
+background:#edf4ff;color:#2865a8;
+padding:10px 12px;
+}
+
+/* CARTÃO TRANSPARENTE DE DISTÂNCIA */
+.distance-card{
+position:absolute;
+z-index:800;
+top:83px;
+left:15px;
+width:220px;
+max-width:calc(100% - 30px);
+border:1px solid #ffffffb8;
+border-radius:16px;
+background:rgba(255,255,255,.76);
+backdrop-filter:blur(18px);
+-webkit-backdrop-filter:blur(18px);
+box-shadow:0 8px 35px #193b6020;
+padding:13px;
+cursor:pointer;
+transition:all .25s ease;
+display:none;
+}
+.distance-card.visible{display:block}
+.distance-card.expanded{
+width:290px;
+background:rgba(255,255,255,.91);
+}
+.distance-top{
+display:flex;align-items:center;justify-content:space-between;
+font-size:11px;font-weight:bold;
+}
+.distance-number{
+font-size:27px;
+font-weight:850;
+color:#1677ff;
+margin:9px 0 2px;
+}
+.distance-number small{font-size:12px;color:#7d8da1}
+.distance-details{
+display:none;
+border-top:1px solid #dce7f4;
+margin-top:10px;
+padding-top:10px;
+font-size:10px;
+line-height:1.8;
+color:#536981;
+}
+.distance-card.expanded .distance-details{display:block}
+.distance-hint{font-size:9px;color:#8796a8;margin-top:6px}
+
+/* MODO ECONOMIA */
+.economy-toggle{
+display:none;
+position:fixed;
+z-index:2000;
+top:14px;
+right:14px;
+width:45px;height:45px;
+font-size:23px;
+border-radius:13px;
+background:rgba(255,255,255,.91);
+color:#1677ff;
+box-shadow:0 4px 20px #183b651c;
+backdrop-filter:blur(15px);
+}
+.economy-menu{
+display:none;
+position:fixed;
+z-index:1999;
+top:67px;
+right:14px;
+width:230px;
+padding:15px;
+border:1px solid #ffffffc9;
+border-radius:16px;
+background:rgba(255,255,255,.91);
+backdrop-filter:blur(20px);
+box-shadow:0 10px 35px #193b6022;
+}
+.economy-menu.open{display:block}
+.economy-menu h3{font-size:12px;margin:0 0 12px}
+.economy-menu button{width:100%;margin-bottom:7px;text-align:left}
+.economy-menu .selected{background:#e8f2ff;color:#1269d9}
+
+/* MODO ECONOMIA: mantém os elementos ancestrais do mapa visíveis */
+body.economy{
+  overflow:hidden;
+  width:100%;
+  height:100%;
+  overscroll-behavior:none;
+}
+body.economy header{display:none}
+body.economy main{
+  display:block;
+  position:fixed;
+  inset:0;
+  width:100%;
+  height:100dvh;
+  max-width:none;
+  margin:0;
+  padding:0;
+  overflow:hidden;
+  z-index:1;
+}
+body.economy .dashboard{display:block;width:100%;height:100%}
+body.economy .map-card{
+  display:block;
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  min-width:0;
+  border:0;
+  border-radius:0;
+  box-shadow:none;
+  overflow:hidden;
+}
+body.economy #map{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  min-height:0;
+  z-index:1;
+}
+body.economy .side,
+body.economy .loop{display:none!important}
+body.economy .economy-toggle{display:block}
+body.economy .distance-card{top:72px;left:12px}
+body.economy .leaflet-control-attribution{font-size:8px!important}
+body.economy .map-head{display:none}
+body.economy ~ .footer{display:none!important}
+
+/* Renderização raster sem filtros que alterem a aparência dos dados */
+.leaflet-image-layer,
+.leaflet-radar-raster{
+  image-rendering:auto!important;
+  filter:none!important;
+}
+
+@media(max-width:850px){
+header{padding:0 12px}
+.brand h1{font-size:18px}
+.dashboard{grid-template-columns:1fr}
+#map{height:58vh;min-height:390px}
+.side{display:grid;grid-template-columns:1fr 1fr}
+.side .panel:last-child{grid-column:1/-1}
+}
+@media(max-width:480px){
+.side{grid-template-columns:1fr}
+.side .panel:last-child{grid-column:auto}
+}
+
+.forecast-time-controls{display:flex;align-items:center;gap:7px;margin-top:10px}
+.forecast-time-controls input{flex:1;min-width:0}
+.forecast-time-controls button{padding:7px 10px}
+.forecast-selected-time{font-size:11px;font-weight:700;color:#1c6ec4;margin:7px 0}
+.forecast-table-wrap{max-height:260px;overflow:auto;border:1px solid #dce3ec;border-radius:7px;margin-top:7px}
+.forecast-table{width:100%;border-collapse:collapse;font-size:10px}
+.forecast-table th,.forecast-table td{padding:7px 5px;text-align:center;border-bottom:1px solid #e5eaf0;white-space:nowrap}
+.forecast-table th{position:sticky;top:0;background:#edf2f8;color:#35465b;z-index:1}
+.forecast-table tr.selected{background:#e5f1ff;font-weight:700}
+.forecast-table td:first-child{text-align:left}
+
+/* Satélite NOAA GOES-19 Band 13: camada raster georreferenciada no Leaflet */
+.satellite-panel{border-left:3px solid #1d78d8}
+.satellite-meta{font-size:10px;line-height:1.6;color:#71839a;margin:7px 0}
+.satellite-controls{display:flex;align-items:center;gap:8px;margin-top:8px}
+.satellite-controls input{flex:1;min-width:0}
+.satellite-state{font-size:10px;line-height:1.5;margin-top:8px;color:#60748b}
+.satellite-state.active{color:#13834b}
+.satellite-stamp{font-size:10px;font-weight:700;margin-top:5px;color:#294c70}
+</style>
+</head>
+
+<body>
+
+<header>
+<div class="brand">
+<div class="logo">☁</div>
+<div>
+<h1>CLOUDGOD</h1>
+<small>MONITORAMENTO METEOROLÓGICO</small>
+</div>
+</div>
+<div class="status" id="status">● INICIALIZANDO</div>
+</header>
+
+<main>
+<div class="dashboard">
+
+<section class="map-card">
+<div class="map-head">
+<div>
+<h2>Radar meteorológico brasileiro</h2>
+<small id="subtitle">OPENSTREETMAP · BRASIL</small>
+</div>
+<div class="mode-buttons">
+<button class="mode-button" onclick="requestLocation()">⌖ MINHA POSIÇÃO</button>
+<button class="primary" onclick="toggleEconomy()">MODO ECONOMIA</button>
+</div>
+</div>
+<div id="map"></div>
+</section>
+
+<aside class="side">
+
+<section class="panel">
+<div class="panel-title">
+<h3>PRODUTOS METEOROLÓGICOS</h3>
+<span>REDEMET</span>
+</div>
+
+<div class="product active" data-product="maxcappi" onclick="selectProduct('maxcappi')">
+<div><strong>MAXCAPPI</strong><small>Reflectividade máxima</small></div><div class="dot"></div>
+</div>
+
+<div class="product" data-product="07km" onclick="selectProduct('07km')">
+<div><strong>CAPPI 7 KM</strong><small>7.300 metros</small></div><div class="dot"></div>
+</div>
+
+<div class="product" data-product="05km" onclick="selectProduct('05km')">
+<div><strong>CAPPI 5 KM</strong><small>5.500 metros</small></div><div class="dot"></div>
+</div>
+
+<div class="product" data-product="infrared" onclick="selectProduct('infrared')">
+<div><strong>INFRAVERMELHO REALÇADO</strong><small>Satélite · imagem infravermelha da América do Sul</small></div><div class="dot"></div>
+</div>
+
+<div class="product" data-product="brightness" onclick="selectProduct('brightness')">
+<div><strong>TEMPERATURA DE BRILHO (BT)</strong><small>GOES-19 ABI C13 · referência Color Enhanced · 10,3 µm</small></div><div class="dot"></div>
+</div>
+
+<div id="btColorLegend" class="bt-legend" aria-label="Tabela de cores de referência da temperatura de brilho">
+<h4>LEGENDA BT · COLOR ENHANCED</h4>
+<table class="bt-table">
+<tbody>
+<tr><td><span class="bt-swatch" style="background:#282828"></span></td><td>Acima de −10 °C</td><td>Superfície / nuvens quentes</td></tr>
+<tr><td><span class="bt-swatch" style="background:#777777"></span></td><td>−10 a −20 °C</td><td>Topo de nuvem frio</td></tr>
+<tr><td><span class="bt-swatch" style="background:#2457a6"></span></td><td>−20 a −30 °C</td><td>Nuvens frias</td></tr>
+<tr><td><span class="bt-swatch" style="background:#20a9d6"></span></td><td>−30 a −40 °C</td><td>Resfriamento acentuado</td></tr>
+<tr><td><span class="bt-swatch" style="background:#35b86b"></span></td><td>−40 a −50 °C</td><td>Convecção profunda</td></tr>
+<tr><td><span class="bt-swatch" style="background:#d5df35"></span></td><td>−50 a −60 °C</td><td>Topos muito frios</td></tr>
+<tr><td><span class="bt-swatch" style="background:#f39a25"></span></td><td>−60 a −70 °C</td><td>Convecção intensa</td></tr>
+<tr><td><span class="bt-swatch" style="background:#df3434"></span></td><td>−70 a −80 °C</td><td>Topos extremamente frios</td></tr>
+<tr><td><span class="bt-swatch" style="background:#c12b9a"></span></td><td>−80 a −90 °C</td><td>Valores muito baixos</td></tr>
+<tr><td><span class="bt-swatch" style="background:#f5f5f5"></span></td><td>Abaixo de −90 °C</td><td>Extremo da escala</td></tr>
+</tbody>
+</table>
+<div class="bt-note">Escala ilustrativa de referência para o realce Color Enhanced. Os intervalos e cores precisam corresponder à tabela de cores aplicada ao raster BT; a legenda, sozinha, não calibra nem altera os pixels.</div>
+</div>
+
+<div class="info" style="margin:10px 0 12px">Exibindo imagens de todos os radares disponíveis. O ícone 📡 indica a localização de cada estação de radar.</div>
+
+<label>OPACIDADE DA IMAGEM</label>
+<input type="range" id="opacity" min="10" max="100" value="90">
+
+<button class="primary" style="width:100%;margin-top:12px" onclick="refreshRadar()">ATUALIZAR REFLECTIVIDADE</button>
+<div id="message">Preparando radar...</div>
+</section>
+
+
+
+<section class="panel">
+<h3>MEDIDOR DE DISTÂNCIA</h3>
+<div class="info">
+Toque em qualquer local do mapa para medir a distância em linha reta a partir da sua posição.
+</div>
+<button class="secondary" style="width:100%;margin-top:10px" onclick="requestLocation()">⌖ LOCALIZAR-ME</button>
+<button class="secondary" style="width:100%;margin-top:7px" onclick="clearSelection()">LIMPAR SELEÇÃO</button>
+<button class="primary" style="width:100%;margin-top:7px" id="areaModeButton" onclick="toggleAreaMode()">▱ MEDIR ÁREA NO MAPA</button>
+<button class="danger" style="width:100%;margin-top:7px" onclick="clearAreaMeasurement()">APAGAR MEDIDA DE ÁREA</button>
+<div id="areaStatus" style="font-size:10px;color:#75869a;margin-top:8px">Modo de área desativado.</div>
+<div id="locationStatus" style="font-size:10px;color:#75869a;margin-top:10px">Localização não solicitada.</div>
+</section>
+
+<section class="panel">
+<h3>LEGENDA DE REFLECTIVIDADE</h3>
+<div class="legend">
+<i style="background:#b6f0ff"></i>
+<i style="background:#42caff"></i>
+<i style="background:#0087ff"></i>
+<i style="background:#00c65b"></i>
+<i style="background:#a4e600"></i>
+<i style="background:#fff000"></i>
+<i style="background:#ff9900"></i>
+<i style="background:#ff3333"></i>
+<i style="background:#c000b9"></i>
+</div>
+<div class="legend-labels"><span>Fraca</span><span>Moderada</span><span>Forte</span><span>Intensa</span></div>
+</section>
+
+<section class="panel">
+<h3>RAIOS E RELÂMPAGOS</h3>
+<div class="info">Exibe detecções reais de descargas elétricas no mapa. O símbolo ⚡ identifica cada descarga; a cor representa a energia relativa detectada.</div>
+<button class="primary" id="lightningToggle" style="width:100%;margin-top:10px" onclick="toggleLightning()">ATIVAR RAIOS E RELÂMPAGOS</button>
+<label>OPACIDADE DOS MARCADORES</label>
+<input type="range" id="lightningOpacity" min="20" max="100" value="100">
+<div class="lightning-legend">
+<span><i class="lightning-dot" style="background:#25a85a"></i>Baixa</span>
+<span><i class="lightning-dot" style="background:#f4d43b"></i>Moderada</span>
+<span><i class="lightning-dot" style="background:#f28c28"></i>Alta</span>
+<span><i class="lightning-dot" style="background:#e33434"></i>Muito alta</span>
+</div>
+<div class="lightning-status" id="lightningStatus">Camada desligada. Fonte prevista: GOES-19 GLM.</div>
+</section>
+
+<section class="panel" id="stormForecastPanel">
+<h3>PREVISÃO DE TEMPESTADES</h3>
+<div class="info">Campo de potencial convectivo previsto pelo GFS, combinando CAPE, precipitação convectiva e códigos de tempo significativo. Não representa rastreamento de células observadas.</div>
+<button class="primary" id="stormForecastToggle" style="width:100%;margin-top:10px" onclick="toggleForecastProduct('storms')">ATIVAR PREVISÃO DE TEMPESTADES</button>
+<div class="stsc-status" id="stormForecastStatus">Produto desligado.</div>
+<div class="forecast-time-controls">
+ <button class="secondary" onclick="shiftForecastHour('storms',-1)">◀</button>
+ <input type="range" id="stormsForecastHour" min="0" max="47" value="0" step="1" oninput="renderForecastHour('storms',this.value)" disabled>
+ <button class="secondary" onclick="shiftForecastHour('storms',1)">▶</button>
+</div>
+<div class="forecast-selected-time" id="stormsForecastSelectedTime">Aguardando dados horários</div>
+<div class="forecast-table-wrap"><table class="forecast-table"><thead><tr><th>HORÁRIO</th><th>POTENCIAL</th><th>CAPE</th><th>CHUVA CONV.</th></tr></thead><tbody id="stormsForecastRows"><tr><td colspan="4">Ative o produto para carregar a previsão.</td></tr></tbody></table></div>
+<div class="stsc-legend" style="flex-wrap:wrap">
+ <span><i style="background:#42a66b"></i>Baixo</span>
+ <span><i style="background:#e6c52e"></i>Moderado</span>
+ <span><i style="background:#ed8b2c"></i>Alto</span>
+ <span><i style="background:#d93434"></i>Muito alto</span>
+</div>
+<button class="secondary" style="width:100%;margin-top:8px" onclick="refreshForecastProduct('storms')">ATUALIZAR PREVISÃO</button>
+</section>
+
+<section class="panel" id="extremeRainPanel">
+<h3>PREVISÃO DE CHUVA EXTREMA</h3>
+<div class="info">Precipitação horária prevista pelo GFS, interpolada em campo contínuo. Os limiares indicam intensidade da chuva, não risco de inundação.</div>
+<button class="primary" id="extremeRainToggle" style="width:100%;margin-top:10px" onclick="toggleForecastProduct('rain')">ATIVAR PREVISÃO DE CHUVA EXTREMA</button>
+<div class="stsc-status" id="extremeRainStatus">Produto desligado.</div>
+<div class="forecast-time-controls">
+ <button class="secondary" onclick="shiftForecastHour('rain',-1)">◀</button>
+ <input type="range" id="rainForecastHour" min="0" max="47" value="0" step="1" oninput="renderForecastHour('rain',this.value)" disabled>
+ <button class="secondary" onclick="shiftForecastHour('rain',1)">▶</button>
+</div>
+<div class="forecast-selected-time" id="rainForecastSelectedTime">Aguardando dados horários</div>
+<div class="forecast-table-wrap"><table class="forecast-table"><thead><tr><th>HORÁRIO</th><th>CHUVA mm/h</th><th>ACUM. 3h</th><th>ACUM. 6h</th><th>ACUM. 24h</th></tr></thead><tbody id="rainForecastRows"><tr><td colspan="5">Ative o produto para carregar a previsão.</td></tr></tbody></table></div>
+<div class="stsc-legend" style="flex-wrap:wrap">
+ <span><i style="background:#42a66b"></i>Fraca</span>
+ <span><i style="background:#e6c52e"></i>Moderada</span>
+ <span><i style="background:#ed8b2c"></i>Forte</span>
+ <span><i style="background:#d93434"></i>Extrema</span>
+</div>
+<button class="secondary" style="width:100%;margin-top:8px" onclick="refreshForecastProduct('rain')">ATUALIZAR PREVISÃO</button>
+</section>
+
+<section class="panel" id="tornadoRiskPanel">
+<h3>RISCO AMBIENTAL DE TORNADO</h3>
+<div class="info">Estimativa experimental baseada em CAPE, inibição convectiva, cisalhamento do vento e nível de condensação. Não é probabilidade de tornado nem alerta oficial.</div>
+<button class="primary" id="tornadoRiskToggle" style="width:100%;margin-top:10px" onclick="toggleTornadoRisk()">ATIVAR RISCO NA ÁREA DO MAPA</button>
+<div class="stsc-status" id="tornadoRiskStatus">Camada desligada. Ative para consultar os campos atmosféricos do modelo GFS.</div>
+<div class="stsc-legend" style="flex-wrap:wrap">
+ <span><i style="background:#42a66b"></i>Baixo</span>
+ <span><i style="background:#e6c52e"></i>Marginal</span>
+ <span><i style="background:#ed8b2c"></i>Elevado</span>
+ <span><i style="background:#d93434"></i>Muito elevado</span>
+</div>
+<div class="info" id="tornadoRiskDetails" style="margin-top:9px">Campo contínuo interpolado a partir de pontos do modelo. Não representa ocorrência confirmada.</div>
+<button class="secondary" style="width:100%;margin-top:8px" onclick="refreshTornadoRisk()">ATUALIZAR ANÁLISE</button>
+</section>
+
+<section class="panel">
+<h3>TSC · TEMPO SEVERO CONVECTIVO</h3>
+<div class="info">Ocorrências convectivas do STSC/REDEMET. O histórico é exibido simultaneamente: azul para registros antigos e vermelho para os mais recentes.</div>
+<button class="primary" id="stscToggle" style="width:100%;margin-top:10px" onclick="toggleSTSC()">ATIVAR TSC</button>
+<div class="stsc-controls">
+ <button class="secondary" onclick="refreshSTSC(true)">ATUALIZAR</button>
+ <button class="secondary" onclick="stepSTSCFrame(-1)">MENOS HISTÓRICO</button>
+ <button class="secondary" onclick="stepSTSCFrame(1)">MAIS HISTÓRICO</button>
+</div>
+<label>OPACIDADE DO TSC</label>
+<input type="range" id="stscOpacity" min="10" max="100" value="75">
+<input class="timeline" id="stscTimeline" type="range" min="0" max="0" value="0" disabled>
+<div class="stsc-meta">
+ <span id="stscTime">Aguardando dados</span>
+ <span id="stscFrameNumber">0 / 0</span>
+</div>
+<div class="stsc-legend">
+ <span><i style="background:#2864c5"></i>Antiga</span>
+ <span><i style="background:#e33434"></i>Recente</span>
+</div>
+<div class="stsc-status" id="stscStatus">Camada desligada. Fonte: REDEMET/DECEA.</div>
+</section>
+
+</aside>
+</div>
+
+<section class="loop">
+<div class="loop-head">
+<h3>ANIMAÇÃO TEMPORAL · PRODUTO ATIVO</h3>
+<span id="frameCounter" style="font-size:10px;color:#8293a7">0 imagens</span>
+</div>
+<div class="controls">
+<button class="primary" onclick="startLoop()">▶ INICIAR</button>
+<button class="secondary" onclick="pauseLoop()">Ⅱ PAUSAR</button>
+<button class="secondary" onclick="previousFrame()">◀ ANTERIOR</button>
+<button class="secondary" onclick="nextFrame()">PRÓXIMO ▶</button>
+<button class="danger" onclick="stopLoop()">■ PARAR</button>
+</div>
+<input class="timeline" id="timeline" type="range" min="0" max="0" value="0">
+<div class="timeinfo">
+<span id="frameDate">Aguardando imagens</span>
+<span id="frameNumber">0 / 0</span>
+</div>
+<div class="options">
+<label>VELOCIDADE</label>
+<select id="speed">
+<option value="1500">Lenta</option>
+<option value="800" selected>Normal</option>
+<option value="400">Rápida</option>
+<option value="200">Muito rápida</option>
+</select>
+<label><input type="checkbox" id="autoRefresh"> Atualização automática</label>
+</div>
+</section>
+</main>
+
+<!-- CARTÃO TRANSPARENTE -->
+<div class="distance-card" id="distanceCard" onclick="expandDistanceCard()">
+<div class="distance-top">
+<span>⌖ LOCAL SELECIONADO</span>
+<span id="expandIcon">＋</span>
+</div>
+<div class="distance-number">
+<span id="distanceValue">--</span>
+<small>km</small>
+</div>
+<div style="font-size:10px;color:#6c7e92" id="distanceLabel">Aguardando localização</div>
+<div class="distance-details">
+<div><b>Latitude:</b> <span id="selectedLat">--</span></div>
+<div><b>Longitude:</b> <span id="selectedLon">--</span></div>
+<div><b>Distância:</b> <span id="distanceFull">--</span></div>
+<div><b>Método:</b> Distância geodésica em linha reta</div>
+<div><b>Origem:</b> Sua localização GPS</div>
+</div>
+<div class="distance-hint">Toque para expandir ou recolher</div>
+</div>
+
+<div class="area-card" id="areaCard">
+ <div class="area-card-title">ÁREA SELECIONADA</div>
+ <div class="area-card-value"><span id="areaValue">0,00</span> <small>km²</small></div>
+ <div class="area-card-detail" id="areaDimensions">Aguardando dois pontos no mapa</div>
+</div>
+
+<!-- BOTÃO ECONOMIA -->
+<button class="economy-toggle" onclick="toggleEconomyMenu()">=</button>
+
+<!-- MENU ECONOMIA -->
+<div class="economy-menu" id="economyMenu">
+<h3>CLOUDGOD · PRODUTOS</h3>
+<button id="menu-maxcappi" class="selected" onclick="selectProduct('maxcappi');closeEconomyMenu()">MAXCAPPI</button>
+<button id="menu-07km" onclick="selectProduct('07km');closeEconomyMenu()">REFLECTIVIDADE 7 KM</button>
+<button id="menu-05km" onclick="selectProduct('05km');closeEconomyMenu()">REFLECTIVIDADE 5 KM</button>
+<button id="menu-infrared" onclick="selectProduct('infrared');closeEconomyMenu()">SATÉLITE INFRAVERMELHO REALÇADO</button>
+<button id="menu-brightness" onclick="selectProduct('brightness');closeEconomyMenu()">TEMPERATURA DE BRILHO · GOES-19</button>
+<button id="menu-stsc" onclick="toggleSTSC();closeEconomyMenu()">ATIVAR / DESATIVAR TSC</button>
+<hr style="border:0;border-top:1px solid #e7edf5;margin:10px 0">
+<button class="secondary" onclick="toggleEconomy()">SAIR DO MODO ECONOMIA</button>
+<button class="secondary" onclick="requestLocation()">MINHA LOCALIZAÇÃO</button>
+</div>
+
+<div class="footer">CLOUDGOD · REDEMET/DECEA · NOAA GOES-19 ABI BAND 13 · GOES-19 GLM · OPENSTREETMAP</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/esri-leaflet@3.0.15/dist/esri-leaflet.js"></script>
+
+<script>
+// ============================================
+// CONFIGURAÇÃO REDEMET
+// ============================================
+
+const API_KEY="7qwre4IVDPRVlfPMxLyh25wFBnExIT0XictqRqLt";
+
+const API={
+ maxcappi:"https://api-redemet.decea.mil.br/produtos/radar/maxcappi",
+ "07km":"https://api-redemet.decea.mil.br/produtos/radar/07km",
+ "05km":"https://api-redemet.decea.mil.br/produtos/radar/05km",
+ infrared:"https://api-redemet.decea.mil.br/produtos/satelite/realcada"
+};
+
+let currentProduct="maxcappi";
+let frames=[];
+let currentFrame=0;
+let loopTimer=null;
+let radarLayers=[];
+let refreshing=false;
+let frameRenderToken=0;
+const radarStationGroup=L.layerGroup();
+let radarStationsLoaded=false;
+
+// Descargas elétricas: o endpoint deve ser servido por uma função backend.
+// O backend consulta/decodifica os arquivos oficiais GOES-19 GLM-L2-LCFA
+// e devolve GeoJSON: {"type":"FeatureCollection","features":[...]}
+const LIGHTNING_API="/api/lightning";
+let lightningEnabled=false;
+let lightningTimer=null;
+let lightningGroup=L.layerGroup();
+let lightningFeatures=[];
+let lightningLayers=[];
+let lightningRequest=null;
+let lightningLastSignature="";
+const lightningCanvas=L.canvas({padding:0.5});
+
+// Sistema de Tempo Severo Convectivo (STSC) da REDEMET/DECEA.
+const STSC_API="https://api-redemet.decea.mil.br/produtos/stsc";
+const STSC_ANIMATION_FRAMES=15; // A API aceita até 60 quadros.
+let stscEnabled=false;
+let stscTimer=null;
+let stscRequest=null;
+let stscGroup=L.layerGroup();
+let stscFrames=[];
+let stscCurrentFrame=0;
+let stscLastSignature="";
+
+// ============================================
+// MAPA
+// ============================================
+
+const map=L.map("map",{
+ center:[-14.2,-51.9],
+ zoom:4,
+ preferCanvas:true
+});
+
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+ attribution:"© OpenStreetMap contributors",
+ maxZoom:19
+}).addTo(map);
+
+const radarGroup=L.layerGroup().addTo(map);
+radarStationGroup.addTo(map);
+
+// ============================================
+// GOES-19 ABI BAND 13 · BT CALIBRADA + COLOR ENHANCED
+// O backend lê o produto NOAA ABI-L2-CMIPF-M6C13 (NetCDF),
+// converte CMI para temperatura de brilho em Kelvin e reprojeta
+// a imagem para latitude/longitude antes de servir o PNG.
+// ============================================
+const BT_BACKEND_URL="COLE_A_URL_DO_BACKEND_AQUI";
+const SOUTH_AMERICA_BOUNDS=[[-56.5,-82.0],[13.5,-32.0]];
+let goes13Layer=null;
+let goes13Enabled=false;
+let goes13RefreshTimer=null;
+function btImageUrl(){
+ if(!BT_BACKEND_URL||BT_BACKEND_URL.includes("COLE_A_URL")){
+  throw new Error("Backend BT ainda não configurado. Publique a pasta backend e informe a URL em BT_BACKEND_URL.");
+ }
+ return BT_BACKEND_URL.replace(/\/$/,"")+"/bt.png?t="+Date.now();
+}
+function createGOES13Layer(){
+ const url=btImageUrl();
+ const layer=L.imageOverlay(url,SOUTH_AMERICA_BOUNDS,{
+  opacity:(Number(document.getElementById("opacity").value)||90)/100,
+  interactive:false,
+  crossOrigin:true,
+  className:"cloudgod-bt-raster"
+ });
+ layer.on("load",()=>{
+  goes13Enabled=true;
+  document.getElementById("message").textContent="BT GOES-19 carregada · ABI C13 · temperatura calibrada em Kelvin · realce Color Enhanced.";
+  if(!goes13RefreshTimer)goes13RefreshTimer=setInterval(()=>{
+   if(currentProduct==="brightness"&&goes13Layer)refreshGOES13();
+  },5*60*1000);
+ });
+ layer.on("error",()=>{
+  goes13Enabled=false;
+  document.getElementById("message").textContent="Falha ao obter BT calibrada. Verifique se o backend está publicado e acessível.";
+ });
+ return layer;
+}
+function refreshGOES13(){
+ try{
+  document.getElementById("message").textContent="Buscando o NetCDF mais recente do GOES-19 ABI C13 e calculando temperatura de brilho...";
+  if(!goes13Layer){
+   goes13Layer=createGOES13Layer();
+   goes13Layer.addTo(map);
+  }else{
+   goes13Layer.setUrl(btImageUrl());
+   if(!map.hasLayer(goes13Layer))goes13Layer.addTo(map);
+  }
+  goes13Layer.setOpacity((Number(document.getElementById("opacity").value)||90)/100);
+ }catch(error){
+  document.getElementById("message").textContent=error.message;
+ }
+}
+
+// ============================================
+// INDICADOR EXPERIMENTAL DE AMBIENTE FAVORÁVEL A TORNADOS
+// Fonte: Open-Meteo GFS. Não representa probabilidade nem alerta oficial.
+// ============================================
+let tornadoRiskEnabled=false;
+let tornadoRiskBusy=false;
+let tornadoRiskLayer=L.layerGroup();
+let tornadoRiskAbort=null;
+let tornadoRiskLastRun=0;
+const TORNADO_RISK_API="https://api.open-meteo.com/v1/gfs";
+
+function tornadoWindVector(speedKmh,directionDeg){
+ const speed=Number(speedKmh)/3.6;
+ const direction=Number(directionDeg)*Math.PI/180;
+ if(!Number.isFinite(speed)||!Number.isFinite(direction))return null;
+ // Componentes meteorológicos: direção indica de onde o vento sopra.
+ return {u:-speed*Math.sin(direction),v:-speed*Math.cos(direction)};
+}
+function tornadoVectorShear(s1,d1,s2,d2){
+ const a=tornadoWindVector(s1,d1),b=tornadoWindVector(s2,d2);
+ if(!a||!b)return null;
+ return Math.hypot(b.u-a.u,b.v-a.v);
+}
+function tornadoLCL(tempC,dewC){
+ const spread=Number(tempC)-Number(dewC);
+ if(!Number.isFinite(spread))return null;
+ return Math.max(0,125*spread); // aproximação empírica em metros AGL
+}
+function tornadoRiskAssessment(data,index){
+ const h=data.hourly||{};
+ const get=k=>Number(h[k]?.[index]);
+ const cape=get("cape");
+ const cin=get("convective_inhibition");
+ const temp=get("temperature_2m");
+ const dew=get("dew_point_2m");
+ const shear06=tornadoVectorShear(
+  get("wind_speed_10m"),get("wind_direction_10m"),
+  get("wind_speed_500hPa"),get("wind_direction_500hPa")
+ );
+ const shear01=tornadoVectorShear(
+  get("wind_speed_10m"),get("wind_direction_10m"),
+  get("wind_speed_925hPa"),get("wind_direction_925hPa")
+ );
+ const lcl=tornadoLCL(temp,dew);
+ if(![cape,cin,temp,dew].every(Number.isFinite)||shear06===null||shear01===null){
+  return {level:"Indisponível",color:"#78889a",score:null,cape,shear06,shear01,lcl,cin};
+ }
+
+ // Escore heurístico transparente, não validado operacionalmente.
+ let score=0;
+ if(cape>=500)score+=1;
+ if(cape>=1000)score+=1;
+ if(cape>=2000)score+=1;
+ if(cin>=-100)score+=1;
+ if(shear06>=20)score+=1;
+ if(shear06>=30)score+=1;
+ if(shear01>=10)score+=1;
+ if(lcl!==null&&lcl<=1000)score+=1;
+
+ let level="Baixo",color="#42a66b";
+ if(score>=3){level="Marginal";color="#e6c52e";}
+ if(score>=5){level="Elevado";color="#ed8b2c";}
+ if(score>=7){level="Muito elevado";color="#d93434";}
+ // Sem instabilidade, não elevar o risco apenas pelo vento.
+ if(cape<100||cin< -250){level="Baixo";color="#42a66b";score=Math.min(score,1);}
+ return {level,color,score,cape,shear06,shear01,lcl,cin};
+}
+function tornadoGridPoints(){
+ const b=map.getBounds();
+ const south=Math.max(-55,b.getSouth()),north=Math.min(12,b.getNorth());
+ const west=Math.max(-82,b.getWest()),east=Math.min(-28,b.getEast());
+ const rows=5,cols=5,points=[];
+ for(let y=0;y<rows;y++){
+  const lat=south+(north-south)*(rows===1?0.5:y/(rows-1));
+  for(let x=0;x<cols;x++){
+   const lon=west+(east-west)*(cols===1?0.5:x/(cols-1));
+   points.push({lat,lon});
+  }
+ }
+ return points;
+}
+function tornadoNearestHour(times){
+ const now=Date.now();
+ let best=0,bestDiff=Infinity;
+ times.forEach((t,i)=>{
+  const diff=Math.abs(new Date(t).getTime()-now);
+  if(Number.isFinite(diff)&&diff<bestDiff){best=i;bestDiff=diff;}
+ });
+ return best;
+}
+
+function tornadoRiskColor(value){
+ const stops=[
+  {v:0,c:[42,166,107]},
+  {v:2,c:[230,197,46]},
+  {v:4,c:[237,139,44]},
+  {v:6,c:[217,52,52]},
+  {v:8,c:[135,25,45]}
+ ];
+ const v=Math.max(0,Math.min(8,value));
+ let a=stops[0],b=stops[stops.length-1];
+ for(let i=0;i<stops.length-1;i++){
+  if(v>=stops[i].v&&v<=stops[i+1].v){a=stops[i];b=stops[i+1];break;}
+ }
+ const t=(v-a.v)/(b.v-a.v||1);
+ return a.c.map((n,i)=>Math.round(n+(b.c[i]-n)*t));
+}
+function tornadoSmoothField(points,assessments){
+ const valid=points.map((p,i)=>({x:i%5,y:Math.floor(i/5),score:assessments[i]?.score}))
+  .filter(p=>Number.isFinite(p.score));
+ if(valid.length<4)throw new Error("Dados insuficientes para interpolar o campo meteorológico.");
+ const canvas=document.createElement("canvas");
+ const size=512;
+ canvas.width=size;canvas.height=size;
+ const ctx=canvas.getContext("2d");
+ const image=ctx.createImageData(size,size);
+ const data=image.data;
+ // Interpolação IDW em grade regular: suaviza o campo sem desenhar marcadores.
+ for(let py=0;py<size;py++){
+  const gy=(py/(size-1))*4;
+  for(let px=0;px<size;px++){
+   const gx=(px/(size-1))*4;
+   let weighted=0,total=0,nearest=Infinity;
+   for(const p of valid){
+    const d2=(gx-p.x)**2+(gy-p.y)**2;
+    if(d2<1e-8){weighted=p.score;total=1;nearest=0;break;}
+    const w=1/(d2*d2);
+    weighted+=p.score*w;total+=w;
+    if(d2<nearest)nearest=d2;
+   }
+   const value=weighted/total;
+   const [r,g,b]=tornadoRiskColor(value);
+   const k=(py*size+px)*4;
+   data[k]=r;data[k+1]=g;data[k+2]=b;
+   // Feathered transparency keeps the raster from looking like a solid opaque sheet.
+   const edge=Math.min(gx,4-gx,gy,4-gy);
+   const edgeFade=Math.max(0,Math.min(1,edge/0.22));
+   data[k+3]=Math.round(150*edgeFade);
+  }
+ }
+ ctx.putImageData(image,0,0);
+ return canvas.toDataURL("image/png");
+}
+
+async function refreshTornadoRisk(){
+ if(!tornadoRiskEnabled||tornadoRiskBusy)return;
+ tornadoRiskBusy=true;
+ const status=document.getElementById("tornadoRiskStatus");
+ status.textContent="Consultando GFS e interpolando o campo de risco...";
+ if(tornadoRiskAbort)tornadoRiskAbort.abort();
+ tornadoRiskAbort=new AbortController();
+ const points=tornadoGridPoints();
+ const latitudes=points.map(p=>p.lat.toFixed(3)).join(",");
+ const longitudes=points.map(p=>p.lon.toFixed(3)).join(",");
+ const hourly=[
+  "cape","convective_inhibition","temperature_2m","dew_point_2m",
+  "wind_speed_10m","wind_direction_10m",
+  "wind_speed_925hPa","wind_direction_925hPa",
+  "wind_speed_500hPa","wind_direction_500hPa"
+ ].join(",");
+ const url=`${TORNADO_RISK_API}?latitude=${encodeURIComponent(latitudes)}&longitude=${encodeURIComponent(longitudes)}&hourly=${hourly}&forecast_days=2&timezone=auto&wind_speed_unit=kmh`;
+ try{
+  const response=await fetch(url,{signal:tornadoRiskAbort.signal,cache:"no-store"});
+  if(!response.ok)throw new Error(`Open-Meteo HTTP ${response.status}`);
+  const result=await response.json();
+  const datasets=Array.isArray(result)?result:[result];
+  if(!datasets.length)throw new Error("O modelo não retornou pontos.");
+  const assessments=new Array(points.length).fill(null);
+  let valid=0,highest=0;
+  datasets.forEach((data,i)=>{
+   const times=data.hourly?.time;
+   if(!Array.isArray(times)||!times.length)return;
+   const idx=tornadoNearestHour(times);
+   const assessment=tornadoRiskAssessment(data,idx);
+   if(assessment.score===null)return;
+   assessments[i]=assessment;
+   valid++;
+   highest=Math.max(highest,assessment.score);
+  });
+  if(valid<4)throw new Error("Poucos pontos com dados válidos para formar o campo fluido.");
+  const imageUrl=tornadoSmoothField(points,assessments);
+  tornadoRiskLayer.clearLayers();
+  const south=Math.min(...points.map(p=>p.lat));
+  const north=Math.max(...points.map(p=>p.lat));
+  const west=Math.min(...points.map(p=>p.lon));
+  const east=Math.max(...points.map(p=>p.lon));
+  L.imageOverlay(imageUrl,[[south,west],[north,east]],{
+   opacity:1,interactive:false,crossOrigin:false
+  }).addTo(tornadoRiskLayer);
+  if(tornadoRiskEnabled)tornadoRiskLayer.addTo(map);
+  tornadoRiskLastRun=Date.now();
+  status.textContent=`Campo contínuo interpolado em ${valid}/${points.length} pontos. Maior índice amostrado: ${highest}/8. Modelo: GFS/Open-Meteo.`;
+  document.getElementById("tornadoRiskDetails").textContent=
+   "Visualização fluida por interpolação espacial dos pontos GFS. Cisalhamento estimado entre 10 m e 500 hPa (~5,6 km) e entre 10 m e 925 hPa (~0,8 km). SRH não está disponível neste cálculo. As transições suaves são interpolação gráfica, não resolução real adicional do modelo.";
+ }catch(error){
+  if(error.name!=="AbortError"){
+   status.textContent=`Falha ao consultar dados atmosféricos: ${error.message}`;
+  }
+ }finally{
+  tornadoRiskBusy=false;
+ }
+}
+
+// Produtos de previsão: tempestades e chuva extrema.
+const forecastProducts={
+ storms:{enabled:false,busy:false,layer:L.layerGroup(),abort:null,data:null,index:0},
+ rain:{enabled:false,busy:false,layer:L.layerGroup(),abort:null,data:null,index:0}
+};
+function forecastProductScore(kind,data,index){
+ const h=data.hourly||{};
+ const val=k=>Number(h[k]?.[index]);
+ if(kind==="rain"){
+  const mm=val("precipitation");
+  if(!Number.isFinite(mm))return null;
+  return Math.max(0,Math.min(8,mm<=0?0:mm<1?1:mm<5?3:mm<10?5:mm<20?7:8));
+ }
+ const cape=val("cape"),conv=val("showers"),weather=val("weather_code");
+ if(!Number.isFinite(cape)||!Number.isFinite(conv))return null;
+ let score=0;
+ if(cape>=250)score++;
+ if(cape>=750)score++;
+ if(cape>=1500)score++;
+ if(conv>=0.5)score++;
+ if(conv>=2)score++;
+ if(conv>=5)score++;
+ if([95,96,99].includes(weather))score+=2;
+ return Math.min(8,score);
+}
+function forecastHourLabel(time){
+ const d=new Date(time);
+ return Number.isNaN(d.getTime())?time:d.toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
+}
+function forecastHourlySummary(kind,index){
+ const product=forecastProducts[kind],datasets=product.data?.datasets||[];
+ let scores=[],cape=[],conv=[],rain=[],acc3=[],acc6=[],acc24=[];
+ datasets.forEach(data=>{
+  const h=data.hourly||{};
+  const get=k=>Number(h[k]?.[index]);
+  if(kind==="storms"){
+   const s=forecastProductScore(kind,data,index);
+   if(s!==null)scores.push(s);
+   if(Number.isFinite(get("cape")))cape.push(get("cape"));
+   if(Number.isFinite(get("showers")))conv.push(get("showers"));
+  }else{
+   const values=h.precipitation||[];
+   const mm=Number(values[index]);
+   if(Number.isFinite(mm)){
+    rain.push(mm);
+    const sum=(n)=>values.slice(Math.max(0,index-n+1),index+1).reduce((a,v)=>a+(Number(v)||0),0);
+    acc3.push(sum(3));acc6.push(sum(6));acc24.push(sum(24));
+   }
+  }
+ });
+ const max=a=>a.length?Math.max(...a):null;
+ return {score:max(scores),cape:max(cape),conv:max(conv),rain:max(rain),acc3:max(acc3),acc6:max(acc6),acc24:max(acc24)};
+}
+function forecastRiskLabel(score){
+ if(score===null)return "Sem dados";
+ return score<=1?"Baixo":score<=3?"Moderado":score<=5?"Alto":"Muito alto";
+}
+function renderForecastHour(kind,index){
+ const product=forecastProducts[kind],data=product.data;
+ if(!data)return;
+ const times=data.times;
+ const i=Math.max(0,Math.min(times.length-1,Number(index)||0));
+ product.index=i;
+ const summary=forecastHourlySummary(kind,i);
+ const slider=document.getElementById(kind==="storms"?"stormsForecastHour":"rainForecastHour");
+ slider.max=String(times.length-1);slider.value=String(i);slider.disabled=false;
+ const selected=document.getElementById(kind==="storms"?"stormsForecastSelectedTime":"rainForecastSelectedTime");
+ selected.textContent=`HORÁRIO SELECIONADO: ${forecastHourLabel(times[i])} · GFS`;
+ const rows=document.getElementById(kind==="storms"?"stormsForecastRows":"rainForecastRows");
+ const fmt=(v,d=1)=>v===null||!Number.isFinite(v)?"N/D":v.toFixed(d);
+ const begin=Math.max(0,i-2),finish=Math.min(times.length-1,i+5);
+ let markup="";
+ for(let j=begin;j<=finish;j++){
+  const s=forecastHourlySummary(kind,j);
+  const active=j===i?' class="selected"':"";
+  if(kind==="storms"){
+   markup+=`<tr${active} onclick="renderForecastHour('storms',${j})"><td>${forecastHourLabel(times[j])}</td><td>${forecastRiskLabel(s.score)}</td><td>${fmt(s.cape,0)} J/kg</td><td>${fmt(s.conv,1)} mm</td></tr>`;
+  }else{
+   markup+=`<tr${active} onclick="renderForecastHour('rain',${j})"><td>${forecastHourLabel(times[j])}</td><td>${fmt(s.rain)}</td><td>${fmt(s.acc3)}</td><td>${fmt(s.acc6)}</td><td>${fmt(s.acc24)}</td></tr>`;
+  }
+ }
+ rows.innerHTML=markup||`<tr><td colspan="${kind==="storms"?4:5}">Sem dados neste horário.</td></tr>`;
+ // Refresh the fluid map for the selected valid time.
+ const points=data.points;
+ const scores=new Array(points.length).fill(null);
+ let valid=0,peak=0;
+ data.datasets.forEach((dataset,pointIndex)=>{
+  const score=forecastProductScore(kind,dataset,i);
+  if(score===null)return;
+  scores[pointIndex]={score};valid++;peak=Math.max(peak,score);
+ });
+ if(valid>=4){
+  const imageUrl=tornadoSmoothField(points,scores);
+  product.layer.clearLayers();
+  const south=Math.min(...points.map(p=>p.lat)),north=Math.max(...points.map(p=>p.lat));
+  const west=Math.min(...points.map(p=>p.lon)),east=Math.max(...points.map(p=>p.lon));
+  L.imageOverlay(imageUrl,[[south,west],[north,east]],{opacity:1,interactive:false,crossOrigin:false}).addTo(product.layer);
+  if(product.enabled)product.layer.addTo(map);
+ }
+ const status=document.getElementById(kind==="storms"?"stormForecastStatus":"extremeRainStatus");
+ status.textContent=kind==="storms"
+  ?`Potencial máximo na área: ${forecastRiskLabel(summary.score)} · CAPE máximo ${fmt(summary.cape,0)} J/kg · chuva convectiva ${fmt(summary.conv,1)} mm.`
+  :`Pico na área: ${fmt(summary.rain)} mm/h · acumulado máximo 3h ${fmt(summary.acc3)} mm · 6h ${fmt(summary.acc6)} mm · 24h ${fmt(summary.acc24)} mm.`;
+}
+function shiftForecastHour(kind,delta){
+ const product=forecastProducts[kind];
+ if(product.data)renderForecastHour(kind,product.index+delta);
+}
+async function refreshForecastProduct(kind){
+ const product=forecastProducts[kind];
+ if(!product||!product.enabled||product.busy)return;
+ product.busy=true;
+ const status=document.getElementById(kind==="storms"?"stormForecastStatus":"extremeRainStatus");
+ status.textContent="Consultando a previsão horária do GFS...";
+ if(product.abort)product.abort.abort();
+ product.abort=new AbortController();
+ const points=tornadoGridPoints();
+ const lat=points.map(p=>p.lat.toFixed(3)).join(",");
+ const lon=points.map(p=>p.lon.toFixed(3)).join(",");
+ const vars=kind==="storms"?"cape,showers,weather_code":"precipitation";
+ const url=`${TORNADO_RISK_API}?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lon)}&hourly=${vars}&forecast_days=2&timezone=auto`;
+ try{
+  let response=null;
+  let usedFallback=false;
+  let primaryError=null;
+  try{
+   response=await fetch(url,{signal:product.abort.signal,cache:"no-store"});
+   if(!response.ok)throw new Error(`GFS HTTP ${response.status}`);
+  }catch(primary){
+   if(primary.name==="AbortError")throw primary;
+   primaryError=primary;
+   // Segunda rota: API Forecast com o modelo GFS Seamless explicitamente selecionado.
+   // Mantém as mesmas coordenadas, variáveis e período solicitados pelo produto.
+   const fallbackUrl=url.replace("https://api.open-meteo.com/v1/gfs?","https://api.open-meteo.com/v1/forecast?")+"&models=gfs_seamless";
+   response=await fetch(fallbackUrl,{signal:product.abort.signal,cache:"no-store"});
+   if(!response.ok)throw new Error(`GFS indisponível (${primary.message}); rota alternativa HTTP ${response.status}`);
+   usedFallback=true;
+  }
+  const payload=await response.json();
+  const datasets=Array.isArray(payload)?payload:[payload];
+  const times=datasets.find(d=>Array.isArray(d.hourly?.time))?.hourly.time;
+  if(!times?.length)throw new Error("O GFS não retornou série horária.");
+  product.data={datasets,points,times};
+  const now=Date.now();
+  let idx=times.findIndex(t=>new Date(t).getTime()>=now);
+  if(idx<0)idx=0;
+  renderForecastHour(kind,idx);
+  if(usedFallback){
+   status.textContent="Previsão carregada pela rota alternativa Open-Meteo com GFS Seamless. "+status.textContent;
+  }
+ }catch(error){
+  if(error.name!=="AbortError"){
+   const detail=error.message==="Failed to fetch"
+    ?"Falha de conexão com o serviço meteorológico. Verifique a internet, bloqueios de rede ou CORS e tente novamente."
+    :error.message;
+   status.textContent=`Produto indisponível: ${detail}. O mapa-base permanece disponível.`;
+  }
+ }finally{product.busy=false;}
+}
+function toggleForecastProduct(kind){
+ const product=forecastProducts[kind];
+ product.enabled=!product.enabled;
+ const storms=kind==="storms";
+ const button=document.getElementById(storms?"stormForecastToggle":"extremeRainToggle");
+ button.textContent=product.enabled
+  ?(storms?"DESATIVAR PREVISÃO DE TEMPESTADES":"DESATIVAR PREVISÃO DE CHUVA EXTREMA")
+  :(storms?"ATIVAR PREVISÃO DE TEMPESTADES":"ATIVAR PREVISÃO DE CHUVA EXTREMA");
+ if(product.enabled){
+  product.layer.addTo(map);
+  refreshForecastProduct(kind);
+ }else{
+  if(product.abort)product.abort.abort();
+  product.layer.remove();
+  document.getElementById(storms?"stormForecastStatus":"extremeRainStatus").textContent="Produto desligado.";
+ }
+}
+
+function toggleTornadoRisk(){
+ tornadoRiskEnabled=!tornadoRiskEnabled;
+ const button=document.getElementById("tornadoRiskToggle");
+ if(tornadoRiskEnabled){
+  button.textContent="DESATIVAR RISCO DE TORNADO";
+  tornadoRiskLayer.addTo(map);
+  refreshTornadoRisk();
+ }else{
+  button.textContent="ATIVAR RISCO NA ÁREA DO MAPA";
+  if(tornadoRiskAbort)tornadoRiskAbort.abort();
+  tornadoRiskLayer.remove();
+  document.getElementById("tornadoRiskStatus").textContent="Camada desligada.";
+ }
+}
+
+
+// ============================================
+// LOCALIZAÇÃO E DISTÂNCIA
+// ============================================
+
+let userPosition=null;
+let userMarker=null;
+let selectedMarker=null;
+let selectedPoint=null;
+let areaMode=false;
+let areaStart=null;
+let areaEnd=null;
+let areaRectangle=null;
+let areaStartMarker=null;
+let areaEndMarker=null;
+
+function requestLocation(){
+
+ if(!navigator.geolocation){
+  document.getElementById("locationStatus").textContent=
+   "Geolocalização não suportada.";
+  return;
+ }
+
+ document.getElementById("locationStatus").textContent=
+  "Obtendo sua localização...";
+
+ navigator.geolocation.getCurrentPosition(position=>{
+
+  userPosition={
+   lat:position.coords.latitude,
+   lon:position.coords.longitude
+  };
+
+  if(userMarker)map.removeLayer(userMarker);
+
+  userMarker=L.circleMarker(
+   [userPosition.lat,userPosition.lon],
+   {
+    radius:9,
+    color:"#ffffff",
+    weight:3,
+    fillColor:"#1677ff",
+    fillOpacity:1
+   }
+  ).addTo(map).bindPopup("Sua localização");
+
+  map.setView(
+   [userPosition.lat,userPosition.lon],
+   8
+  );
+
+  document.getElementById("locationStatus").textContent=
+   "Localização GPS obtida.";
+
+  if(selectedPoint)updateDistance();
+
+ },error=>{
+
+  const errors={
+   1:"Permissão de localização negada.",
+   2:"Localização indisponível.",
+   3:"Tempo de localização esgotado."
+  };
+
+  document.getElementById("locationStatus").textContent=
+   errors[error.code]||"Erro de localização.";
+
+ },{
+  enableHighAccuracy:true,
+  timeout:15000,
+  maximumAge:30000
+ });
+}
+
+// Fórmula de Haversine: distância em km.
+
+function haversine(lat1,lon1,lat2,lon2){
+
+ const R=6371;
+ const rad=x=>x*Math.PI/180;
+
+ const dLat=rad(lat2-lat1);
+ const dLon=rad(lon2-lon1);
+
+ const a=
+  Math.sin(dLat/2)**2+
+  Math.cos(rad(lat1))*
+  Math.cos(rad(lat2))*
+  Math.sin(dLon/2)**2;
+
+ return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+// ============================================
+// MODO A TOQUE
+// ============================================
+
+map.on("click",function(event){
+ if(areaMode){
+  const point={lat:event.latlng.lat,lng:event.latlng.lng};
+  if(!areaStart){
+   areaStart=point;
+   areaEnd=point;
+   areaStartMarker=L.circleMarker(event.latlng,{radius:5,color:"#fff",weight:2,fillColor:"#1677ff",fillOpacity:1}).addTo(map);
+   document.getElementById("areaStatus").textContent="Primeiro ponto marcado. Toque em outro ponto para definir e calcular a área.";
+  }else{
+   areaEnd=point;
+   if(areaEndMarker)map.removeLayer(areaEndMarker);
+   areaEndMarker=L.circleMarker(event.latlng,{radius:5,color:"#fff",weight:2,fillColor:"#1677ff",fillOpacity:1}).addTo(map);
+   document.getElementById("areaStatus").textContent="Área calculada. Toque em outro ponto para redimensionar o retângulo.";
+  }
+  updateAreaMeasurement();
+  return;
+ }
+
+ selectedPoint={lat:event.latlng.lat,lon:event.latlng.lng};
+ if(selectedMarker)map.removeLayer(selectedMarker);
+ selectedMarker=L.circleMarker(event.latlng,{radius:8,color:"#ffffff",weight:3,fillColor:"#ff8b36",fillOpacity:1}).addTo(map);
+ document.getElementById("distanceCard").classList.add("visible");
+ document.getElementById("distanceCard").classList.remove("expanded");
+ document.getElementById("expandIcon").textContent="＋";
+ document.getElementById("selectedLat").textContent=selectedPoint.lat.toFixed(5);
+ document.getElementById("selectedLon").textContent=selectedPoint.lon.toFixed(5);
+ if(userPosition){updateDistance();}else{
+  document.getElementById("distanceValue").textContent="--";
+  document.getElementById("distanceLabel").textContent="Ative sua localização GPS para medir";
+  document.getElementById("distanceFull").textContent="Localização não disponível";
+ }
+});
+
+function toggleAreaMode(){
+ areaMode=!areaMode;
+ const button=document.getElementById("areaModeButton");
+ button.textContent=areaMode?"CANCELAR MEDIÇÃO":"▱ MEDIR ÁREA NO MAPA";
+ document.getElementById("areaStatus").textContent=areaMode?"Modo ativo: toque em dois pontos do mapa. O segundo ponto ajusta o retângulo.":"Modo de área desativado.";
+ if(areaMode)map.getContainer().style.cursor="crosshair";
+ else map.getContainer().style.cursor="";
+}
+
+function updateAreaMeasurement(){
+ if(!areaStart||!areaEnd)return;
+ const south=Math.min(areaStart.lat,areaEnd.lat), north=Math.max(areaStart.lat,areaEnd.lat);
+ const west=Math.min(areaStart.lng,areaEnd.lng), east=Math.max(areaStart.lng,areaEnd.lng);
+ const bounds=[[south,west],[north,east]];
+ if(areaRectangle)map.removeLayer(areaRectangle);
+ areaRectangle=L.rectangle(bounds,{color:"#1677ff",weight:2,fillColor:"#4da3ff",fillOpacity:.20,dashArray:"6 4"}).addTo(map);
+ const height=haversine(south,west,north,west);
+ const width=haversine(south,west,south,east);
+ const area=height*width;
+ document.getElementById("areaValue").textContent=area.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});
+ document.getElementById("areaDimensions").textContent=`Dimensões aproximadas: ${width.toFixed(2)} km × ${height.toFixed(2)} km`;
+ document.getElementById("areaCard").classList.add("visible");
+}
+
+function clearAreaMeasurement(){
+ [areaRectangle,areaStartMarker,areaEndMarker].forEach(layer=>{if(layer)map.removeLayer(layer);});
+ areaRectangle=areaStartMarker=areaEndMarker=null;
+ areaStart=areaEnd=null;
+ document.getElementById("areaCard").classList.remove("visible");
+ document.getElementById("areaValue").textContent="0,00";
+ document.getElementById("areaDimensions").textContent="Aguardando dois pontos no mapa";
+ document.getElementById("areaStatus").textContent=areaMode?"Modo ativo: toque em dois pontos do mapa.":"Medida apagada.";
+}
+
+function updateDistance(){
+
+ if(!userPosition||!selectedPoint)return;
+
+ const km=haversine(
+  userPosition.lat,
+  userPosition.lon,
+  selectedPoint.lat,
+  selectedPoint.lon
+ );
+
+ document.getElementById("distanceValue").textContent=
+  km.toFixed(2);
+
+ document.getElementById("distanceLabel").textContent=
+  "Distância da sua localização";
+
+ document.getElementById("distanceFull").textContent=
+  km.toFixed(2)+" quilômetros";
+
+ document.getElementById("selectedLat").textContent=
+  selectedPoint.lat.toFixed(5);
+
+ document.getElementById("selectedLon").textContent=
+  selectedPoint.lon.toFixed(5);
+}
+
+function expandDistanceCard(){
+
+ const card=document.getElementById("distanceCard");
+
+ card.classList.toggle("expanded");
+
+ document.getElementById("expandIcon").textContent=
+  card.classList.contains("expanded")?"−":"＋";
+}
+
+function clearSelection(){
+
+ if(selectedMarker)map.removeLayer(selectedMarker);
+
+ selectedMarker=null;
+ selectedPoint=null;
+
+ document.getElementById("distanceCard").classList.remove("visible");
+ document.getElementById("distanceCard").classList.remove("expanded");
+}
+
+// ============================================
+// MODO ECONOMIA
+// ============================================
+
+function toggleEconomy(){
+
+ document.body.classList.toggle("economy");
+
+ closeEconomyMenu();
+
+ // Recalcula o mapa depois que o navegador aplicar o novo layout.
+ requestAnimationFrame(()=>{
+  requestAnimationFrame(()=>{
+   map.invalidateSize({pan:false,animate:false});
+  });
+ });
+}
+
+function toggleEconomyMenu(){
+
+ document.getElementById("economyMenu").classList.toggle("open");
+}
+
+function closeEconomyMenu(){
+
+ document.getElementById("economyMenu").classList.remove("open");
+}
+
+// ============================================
+// PRODUTOS
+// ============================================
+
+function selectProduct(product){
+ pauseLoop();
+ currentProduct=product;
+ document.querySelectorAll(".product").forEach(el=>{
+  el.classList.toggle("active",el.dataset.product===product);
+ });
+ ["maxcappi","07km","05km","infrared","brightness"].forEach(id=>{
+  const button=document.getElementById("menu-"+id);
+  if(button)button.classList.toggle("selected",id===product);
+ });
+ document.getElementById("btColorLegend").classList.toggle("open",product==="brightness");
+ if(product==="brightness"){
+  frames=[];currentFrame=0;
+  document.getElementById("subtitle").textContent="GOES-19 ABI C13 · LEGENDA COLOR ENHANCED";
+  document.querySelector(".loop h3").textContent="SATÉLITE · TEMPERATURA DE BRILHO (BT)";
+  document.getElementById("message").textContent="Produto BT selecionado · escala Color Enhanced de referência. A imagem depende de uma fonte BT calibrada conectada.";
+  map.fitBounds(SOUTH_AMERICA_BOUNDS,{padding:[10,10],maxZoom:4});
+  refreshGOES13();
+  return;
+ }
+ if(goes13Layer&&map.hasLayer(goes13Layer))map.removeLayer(goes13Layer);
+ goes13Enabled=false;
+ clearInterval(goes13RefreshTimer);goes13RefreshTimer=null;
+ document.getElementById("subtitle").textContent=
+  product==="infrared" ? "SATÉLITE REDEMET · INFRAVERMELHO REALÇADO · AMÉRICA DO SUL" : "REDEMET · RADAR "+product.toUpperCase();
+ document.querySelector(".loop h3").textContent=product==="infrared"?"ANIMAÇÃO TEMPORAL · SATÉLITE INFRAVERMELHO REALÇADO":"ANIMAÇÃO TEMPORAL · RADAR";
+ if(product==="infrared")map.fitBounds(SOUTH_AMERICA_BOUNDS,{padding:[10,10],maxZoom:4});
+ refreshRadar();
+}
+
+// ============================================
+// DATA UTC E URL
+// ============================================
+
+function utcHour(){
+
+ const d=new Date();
+
+ return d.getUTCFullYear()+
+ String(d.getUTCMonth()+1).padStart(2,"0")+
+ String(d.getUTCDate()).padStart(2,"0")+
+ String(d.getUTCHours()).padStart(2,"0");
+}
+
+function buildURL(){
+ // Sem parâmetro area: a resposta consolidada da REDEMET inclui as estações disponíveis.
+ const params=new URLSearchParams({api_key:API_KEY,data:utcHour(),anima:"15"});
+ return API[currentProduct]+"?"+params.toString();
+}
+
+// Normaliza imagens de radar e recolhe coordenadas das estações mesmo
+// quando a API não disponibiliza uma imagem naquele horário.
+function parseRadarResponse(json){
+ const data=json?.data;
+ const radar=data?.radar;
+ if(!Array.isArray(radar))return {frames:[],stations:[]};
+ // A REDEMET organiza a resposta em grupos temporais. Cada grupo contém
+ // várias estações; manter o grupo inteiro evita uma estação por quadro.
+ const groups=Array.isArray(radar[0])?radar:[radar];
+ const stations=[];
+ const parsedFrames=[];
+ groups.forEach((group,index)=>{
+  const nodes=[];
+  function flatten(value){
+   if(Array.isArray(value)){value.forEach(flatten);return;}
+   if(value&&typeof value==="object"){
+    if(value.path||value.url||value.imagem||value.image||value.arquivo)nodes.push(value);
+    else Object.values(value).forEach(flatten);
+   }
+  }
+  flatten(group);
+  const images=[];
+  nodes.forEach(node=>{
+   const centerLat=Number(node.lat_center??node.latitude_center??node.latCenter);
+   const centerLon=Number(node.lon_center??node.longitude_center??node.lonCenter);
+   if(Number.isFinite(centerLat)&&Number.isFinite(centerLon)){
+    stations.push({id:String(node.id??node.localidade??node.nome??(index+1)),name:node.nome||node.localidade||"Radar meteorológico",lat:centerLat,lon:centerLon});
+   }
+   const path=node.path||node.url||node.imagem||node.image||node.arquivo;
+   const south=Number(node.lat_min??node.latitude_min??node.latMin);
+   const north=Number(node.lat_max??node.latitude_max??node.latMax);
+   const west=Number(node.lon_min??node.longitude_min??node.lonMin);
+   const east=Number(node.lon_max??node.longitude_max??node.lonMax);
+   if(path&&[south,north,west,east].every(Number.isFinite)){
+    images.push({url:/^https?:\/\//i.test(path)?path:new URL(path,"https://api-redemet.decea.mil.br").href,bounds:[[south,west],[north,east]]});
+   }
+  });
+  const time=data?.anima?.[index]||nodes.find(n=>n.data)?.data||("Quadro "+(index+1));
+  if(images.length)parsedFrames.push({time,images});
+ });
+ return {frames:parsedFrames,stations};
+}
+
+function parseSatelliteResponse(json){
+ const data=json?.data;
+ if(!data)return [];
+ const sat=Array.isArray(data.satelite)?data.satelite:(data.satelite?[data.satelite]:[]);
+ const box=data.lat_lon||data.latLon||{};
+ const south=Number(box.lat_min),north=Number(box.lat_max),west=Number(box.lon_min),east=Number(box.lon_max);
+ if(![south,north,west,east].every(Number.isFinite))return [];
+ return sat.map((item,i)=>{
+  const path=typeof item==="string"?item:(item?.path||item?.url||item?.imagem);
+  if(!path)return null;
+  return {time:item?.data||data.anima?.[i]||("Imagem "+(i+1)),images:[{url:/^https?:\/\//i.test(path)?path:new URL(path,"https://api-redemet.decea.mil.br").href,bounds:[[south,west],[north,east]]}]};
+ }).filter(Boolean);
+}
+
+function updateRadarStations(stations){
+ const unique=new Map();
+ stations.forEach(st=>{if(Number.isFinite(st.lat)&&Number.isFinite(st.lon))unique.set(st.id,st);});
+ radarStationGroup.clearLayers();
+ unique.forEach(st=>{
+  const icon=L.divIcon({className:"radar-station-icon",html:"📡",iconSize:[28,30],iconAnchor:[14,15]});
+  const marker=L.marker([st.lat,st.lon],{icon,keyboard:false});
+  marker.bindTooltip(st.name,{className:"radar-station-label",direction:"top",offset:[0,-10]});
+  marker.addTo(radarStationGroup);
+ });
+ radarStationsLoaded=true;
+}
+
+function setStatus(message,ok=false){
+ const el=document.getElementById("status");
+ el.textContent=(ok?"● ":"● ")+message;
+ el.style.background=ok?"#edfaf2":"#fff7e8";
+ el.style.color=ok?"#159657":"#a66b13";
+}
+
+function clearRadarLayers(){
+ radarGroup.clearLayers();
+ radarLayers=[];
+}
+
+async function showFrame(index){
+ if(!frames.length) return;
+ const renderToken=++frameRenderToken;
+ currentFrame=(index+frames.length)%frames.length;
+
+ const frame=frames[currentFrame];
+ const opacity=Number(document.getElementById("opacity").value)/100;
+
+ // Mantém o quadro anterior visível enquanto as novas imagens carregam.
+ const nextLayers=frame.images.map(image=>L.imageOverlay(
+  image.url,image.bounds,
+  {opacity,interactive:false,className:"leaflet-radar-raster"}
+ ));
+ nextLayers.forEach(layer=>layer.addTo(radarGroup));
+
+ const loadResults=await Promise.all(nextLayers.map(layer=>new Promise(resolve=>{
+  let finished=false;
+  const finish=ok=>{
+   if(finished)return;
+   finished=true;
+   clearTimeout(timer);
+   layer.off("load",onLoad);
+   layer.off("error",onError);
+   resolve(ok);
+  };
+  const onLoad=()=>finish(true);
+  const onError=()=>finish(false);
+  const timer=setTimeout(()=>finish(false),15000);
+  layer.once("load",onLoad);
+  layer.once("error",onError);
+ })));
+
+ // Descarta carregamentos antigos quando o usuário avança rapidamente.
+ if(renderToken!==frameRenderToken){
+  nextLayers.forEach(layer=>radarGroup.removeLayer(layer));
+  return;
+ }
+
+ if(loadResults.every(Boolean)){
+  radarLayers.forEach(layer=>radarGroup.removeLayer(layer));
+  radarLayers=nextLayers;
+ }else{
+  nextLayers.forEach(layer=>radarGroup.removeLayer(layer));
+  document.getElementById("message").textContent=
+   "Falha ao carregar uma ou mais imagens. O quadro anterior foi mantido.";
+ }
+
+ document.getElementById("timeline").max=Math.max(0,frames.length-1);
+ document.getElementById("timeline").value=currentFrame;
+ document.getElementById("frameCounter").textContent=frames.length+" quadro(s)";
+ document.getElementById("frameNumber").textContent=(currentFrame+1)+" / "+frames.length;
+ document.getElementById("frameDate").textContent=String(frame.time);
+ document.getElementById("message").textContent=
+  frame.images.length+(currentProduct==="infrared"?" imagem(ns) de satélite Infravermelho realçado no quadro selecionado.":" imagem(ns) de radar no quadro selecionado.");
+}
+
+async function refreshRadar(){
+ if(refreshing)return;
+ refreshing=true;
+ document.getElementById("message").textContent=currentProduct==="infrared"?"Consultando satélite Infravermelho realçado...":"Consultando todos os radares da REDEMET...";
+ setStatus("CONSULTANDO REDEMET");
+ try{
+  const controller=new AbortController();
+  const timeout=setTimeout(()=>controller.abort(),45000);
+  try{
+   if(currentProduct==="infrared"){
+    const response=await fetch(buildURL(),{signal:controller.signal,cache:"no-store"});
+    if(!response.ok)throw new Error("REDEMET respondeu HTTP "+response.status);
+    const json=await response.json();
+    if(json?.error||json?.status===false)throw new Error(json.message||"A API retornou um erro.");
+    const received=parseSatelliteResponse(json);
+    if(!received.length)throw new Error("A API não retornou imagens Infravermelho realçado com limites geográficos válidos.");
+    frames=received;
+    document.getElementById("subtitle").textContent="SATÉLITE REDEMET · INFRAVERMELHO REALÇADO";
+   }else{
+    // Uma única consulta consolidada evita 26 requisições concorrentes e
+    // preserva todas as estações dentro de cada quadro temporal.
+    const response=await fetch(buildURL(),{signal:controller.signal,cache:"no-store"});
+    if(!response.ok)throw new Error("REDEMET respondeu HTTP "+response.status);
+    const json=await response.json();
+    if(json?.error||json?.status===false)throw new Error(json.message||"A API retornou um erro.");
+    const parsed=parseRadarResponse(json);
+    updateRadarStations(parsed.stations);
+    if(!parsed.frames.length)throw new Error("A REDEMET não retornou imagens MAXCAPPI/CAPPI com coordenadas válidas para este horário.");
+    frames=parsed.frames.sort((a,b)=>String(a.time).localeCompare(String(b.time)));
+    const totalImages=frames.reduce((sum,frame)=>sum+frame.images.length,0);
+    document.getElementById("subtitle").textContent="REDEMET · TODOS OS RADARES DO BRASIL";
+    document.getElementById("message").textContent=totalImages+" imagens recebidas de "+parsed.stations.length+" estações identificadas.";
+   }
+   currentFrame=0;
+   showFrame(0);
+   if(currentProduct==="infrared")document.getElementById("message").textContent="Infravermelho realçado: "+frames.length+" imagem(ns) recebida(s).";
+   setStatus("MAPA E IMAGENS ATIVOS",true);
+  }finally{clearTimeout(timeout);}
+ }catch(error){
+  document.getElementById("message").textContent="Não foi possível carregar o produto: "+(error.name==="AbortError"?"tempo limite excedido":error.message)+". O mapa-base permanece disponível.";
+  setStatus("MAPA ATIVO · PRODUTO INDISPONÍVEL");
+ }finally{refreshing=false;}
+}
+
+function nextFrame(){
+ if(frames.length) showFrame(currentFrame+1);
+}
+function previousFrame(){
+ if(frames.length) showFrame(currentFrame-1);
+}
+function pauseLoop(){
+ if(loopTimer){clearInterval(loopTimer);loopTimer=null;}
+}
+function startLoop(){
+ if(!frames.length){
+  document.getElementById("message").textContent="Carregue imagens antes de iniciar a animação.";
+  return;
+ }
+ pauseLoop();
+ const speed=Number(document.getElementById("speed").value)||800;
+ loopTimer=setInterval(nextFrame,speed);
+}
+function stopLoop(){
+ pauseLoop();
+ if(frames.length) showFrame(0);
+}
+document.getElementById("timeline").addEventListener("input",event=>{
+ if(frames.length) showFrame(Number(event.target.value));
+});
+document.getElementById("opacity").addEventListener("input",event=>{
+ const opacity=Number(event.target.value)/100;
+ radarLayers.forEach(layer=>layer.setOpacity(opacity));
+ if(goes13Layer&&currentProduct==="brightness")goes13Layer.setOpacity(opacity);
+});
+document.getElementById("speed").addEventListener("change",()=>{
+ if(loopTimer) startLoop();
+});
+document.getElementById("autoRefresh").addEventListener("change",event=>{
+ if(event.target.checked){
+  refreshRadar();
+  window.radarAutoRefresh=setInterval(refreshRadar,5*60*1000);
+ }else{
+  clearInterval(window.radarAutoRefresh);
+  window.radarAutoRefresh=null;
+ }
+});
+
+// ============================================
+// RAIOS E RELÂMPAGOS · GOES-19 GLM
+// ============================================
+function lightningEnergy(feature){
+ const props=feature?.properties||feature||{};
+ const value=Number(props.flash_energy??props.energy??props.intensity??props.radiant_energy);
+ return Number.isFinite(value)&&value>=0?value:null;
+}
+
+function lightningCoordinates(feature){
+ if(feature?.geometry?.type==="Point"&&Array.isArray(feature.geometry.coordinates)){
+  return {lon:Number(feature.geometry.coordinates[0]),lat:Number(feature.geometry.coordinates[1])};
+ }
+ const p=feature?.properties||feature||{};
+ return {lat:Number(p.flash_lat??p.latitude??p.lat),lon:Number(p.flash_lon??p.longitude??p.lon)};
+}
+
+function lightningColor(value,limits){
+ if(value===null)return "#f28c28";
+ if(value>=limits.high)return "#e33434";
+ if(value>=limits.medium)return "#f28c28";
+ if(value>=limits.low)return "#f4d43b";
+ return "#25a85a";
+}
+
+function lightningQuantile(sorted,ratio){
+ if(!sorted.length)return 0;
+ return sorted[Math.min(sorted.length-1,Math.floor((sorted.length-1)*ratio))];
+}
+
+function renderLightning(data){
+ const features=Array.isArray(data)?data:(data?.features||data?.data||[]);
+ const valid=[];
+ for(const feature of features){
+  const point=lightningCoordinates(feature);
+  if(Number.isFinite(point.lat)&&Number.isFinite(point.lon)&&Math.abs(point.lat)<=90&&Math.abs(point.lon)<=180){
+   valid.push({feature,point,energy:lightningEnergy(feature)});
+  }
+ }
+ const signature=valid.map(item=>{
+  const p=item.feature?.properties||{};
+  return `${p.id??p.flash_id??p.time??p.timestamp??""}:${item.point.lat.toFixed(4)},${item.point.lon.toFixed(4)}:${item.energy??""}`;
+ }).join("|");
+ if(signature===lightningLastSignature)return;
+ lightningLastSignature=signature;
+
+ const energies=valid.map(item=>item.energy).filter(value=>value!==null).sort((a,b)=>a-b);
+ const limits={
+  low:lightningQuantile(energies,.25),
+  medium:lightningQuantile(energies,.50),
+  high:lightningQuantile(energies,.75)
+ };
+ const opacity=Number(document.getElementById("lightningOpacity").value)/100;
+
+ lightningGroup.clearLayers();
+ lightningLayers=[];
+ for(const item of valid){
+  const color=lightningColor(item.energy,limits);
+  const marker=L.circleMarker([item.point.lat,item.point.lon],{
+   renderer:lightningCanvas,
+   radius:5,
+   color,
+   weight:1,
+   opacity,
+   fillColor:color,
+   fillOpacity:opacity,
+   bubblingMouseEvents:false
+  });
+  const energyText=item.energy===null?"Energia não informada":`Energia GLM: ${item.energy.toExponential(2)} J`;
+  const props=item.feature?.properties||{};
+  const time=props.time??props.timestamp??"Horário não informado";
+  marker.bindPopup(`<b>Descarga elétrica detectada</b><br>${energyText}<br>${time}`);
+  marker.addTo(lightningGroup);
+  lightningLayers.push(marker);
+ }
+ lightningFeatures=valid;
+ document.getElementById("lightningStatus").textContent=valid.length
+  ?`${valid.length} descarga(s) recebida(s) do GOES-19 GLM. Cores indicam energia relativa entre as descargas do conjunto.`
+  :"Nenhuma descarga retornada no período consultado.";
+}
+
+async function refreshLightning(){
+ if(!lightningEnabled||lightningRequest)return;
+ const status=document.getElementById("lightningStatus");
+ lightningRequest=new AbortController();
+ const timeout=setTimeout(()=>lightningRequest?.abort(),20000);
+ try{
+  const response=await fetch(LIGHTNING_API+"?satellite=19&minutes=10",{cache:"no-store",signal:lightningRequest.signal});
+  if(!response.ok){
+   let detail="HTTP "+response.status;
+   try{const body=await response.json();detail=body.detail||body.error||detail;}catch{}
+   throw new Error(detail);
+  }
+  const data=await response.json();
+  if(lightningEnabled)renderLightning(data);
+ }catch(error){
+  if(error.name!=="AbortError")status.textContent="Falha ao consultar /api/lightning: "+error.message;
+ }finally{
+  clearTimeout(timeout);
+  lightningRequest=null;
+ }
+}
+
+function toggleLightning(){
+ lightningEnabled=!lightningEnabled;
+ const button=document.getElementById("lightningToggle");
+ if(lightningEnabled){
+  lightningGroup.addTo(map);
+  button.textContent="DESATIVAR RAIOS E RELÂMPAGOS";
+  button.classList.remove("primary");button.classList.add("danger");
+  document.getElementById("lightningStatus").textContent="Conectando à fonte GOES-19 GLM...";
+  refreshLightning();
+  lightningTimer=setInterval(refreshLightning,60000);
+ }else{
+  if(lightningTimer)clearInterval(lightningTimer);
+  lightningTimer=null;
+  if(lightningRequest)lightningRequest.abort();
+  lightningRequest=null;
+  lightningGroup.clearLayers();
+  lightningLayers=[];
+  lightningFeatures=[];
+  lightningLastSignature="";
+  map.removeLayer(lightningGroup);
+  button.textContent="ATIVAR RAIOS E RELÂMPAGOS";
+  button.classList.remove("danger");button.classList.add("primary");
+  document.getElementById("lightningStatus").textContent="Camada desligada.";
+ }
+}
+
+document.getElementById("lightningOpacity").addEventListener("input",event=>{
+ const opacity=Number(event.target.value)/100;
+ lightningLayers.forEach(layer=>layer.setStyle({opacity,fillOpacity:opacity}));
+});
+
+// ============================================
+// TSC / STSC · TEMPO SEVERO CONVECTIVO · REDEMET
+// ============================================
+function stscEscapeHTML(value){
+ return String(value??"").replace(/[&<>"']/g,char=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+ }[char]));
+}
+
+function stscFramePolygons(frame){
+ const rings=[];
+ const isPoint=value=>value&&typeof value==="object"&&
+  (value.la!==undefined||value.lat!==undefined)&&
+  (value.lo!==undefined||value.lon!==undefined);
+ const toPoint=value=>({
+  lat:Number(value?.la??value?.lat),
+  lon:Number(value?.lo??value?.lon)
+ });
+ function walk(node){
+  if(!Array.isArray(node)){
+   if(isPoint(node)){
+    const point=toPoint(node);
+    if(Number.isFinite(point.lat)&&Number.isFinite(point.lon)&&
+       Math.abs(point.lat)<=90&&Math.abs(point.lon)<=180)rings.push([point]);
+   }
+   return;
+  }
+  if(node.length&&node.every(isPoint)){
+   const points=node.map(toPoint).filter(point=>
+    Number.isFinite(point.lat)&&Number.isFinite(point.lon)&&
+    Math.abs(point.lat)<=90&&Math.abs(point.lon)<=180
+   );
+   if(points.length)rings.push(points);
+   return;
+  }
+  node.forEach(walk);
+ }
+ walk(frame);
+ return rings;
+}
+
+function stscFrameColor(index,total){
+ if(total<=1)return "#e33434";
+ const ratio=index/(total-1); // azul = antigo; vermelho = recente
+ const red=Math.round(40+(227-40)*ratio);
+ const green=Math.round(100+(52-100)*ratio);
+ const blue=Math.round(197+(52-197)*ratio);
+ return `rgb(${red},${green},${blue})`;
+}
+
+function normalizeSTSCResponse(json){
+ if(json?.status!==true)throw new Error(json?.message||"A REDEMET não confirmou uma resposta válida.");
+ const data=json?.data;
+ if(!data||!Array.isArray(data.stsc))throw new Error("Resposta STSC sem o campo data.stsc no formato esperado.");
+ const times=Array.isArray(data.anima)?data.anima:[];
+ const info=data.info&&typeof data.info==="object"?data.info:{};
+ return data.stsc.map((raw,index)=>({
+  time:String(times[index]??`Quadro ${index+1}`),
+  positions:stscFramePolygons(raw),
+  info
+ }));
+}
+
+// O TSC oficial mantém as ocorrências antigas e recentes simultaneamente:
+// azul representa detecções antigas e vermelho representa as mais recentes.
+// O controle temporal funciona como limite cumulativo, não como quadro isolado.
+function showSTSCFrame(index){
+ if(!stscFrames.length){
+  stscGroup.clearLayers();
+  document.getElementById("stscTimeline").max=0;
+  document.getElementById("stscTimeline").value=0;
+  document.getElementById("stscTimeline").disabled=true;
+  document.getElementById("stscTime").textContent="Sem ocorrências";
+  document.getElementById("stscFrameNumber").textContent="0 / 0";
+  return;
+ }
+ stscCurrentFrame=Math.max(0,Math.min(stscFrames.length-1,index));
+ const opacity=Number(document.getElementById("stscOpacity").value)/100;
+ stscGroup.clearLayers();
+ let plotted=0;
+ let latestTime="";
+
+ // Cada célula STSC é representada por uma posição central e um raio.
+ // Não conectar coordenadas em polígonos: isso produzia manchas preenchidas incorretas.
+ for(let frameIndex=0;frameIndex<=stscCurrentFrame;frameIndex++){
+  const frame=stscFrames[frameIndex];
+  const color=stscFrameColor(frameIndex,stscFrames.length);
+  latestTime=frame.time;
+  const info=frame.info||{};
+  const rawRadius=Number(info.raio);
+  const radiusMeters=Number.isFinite(rawRadius)&&rawRadius>0
+   ?Math.max(500,Math.min(rawRadius,50000))
+   :null;
+  const details=[
+   info.tipo!==undefined?`Tipo: ${stscEscapeHTML(info.tipo)}`:"",
+   info.topo!==undefined?`Topo: ${stscEscapeHTML(info.topo)}`:"",
+   radiusMeters!==null?`Raio: ${Math.round(radiusMeters)} m`:""
+  ].filter(Boolean).join("<br>");
+  const popup=`<b>TSC · Tempo severo convectivo</b><br>Horário: ${stscEscapeHTML(frame.time)}${details?`<br>${details}`:""}<br>Fonte: REDEMET/DECEA`;
+
+  frame.positions.forEach(points=>{
+   points.forEach(point=>{
+    const latlng=[point.lat,point.lon];
+    const layer=radiusMeters!==null
+     ?L.circle(latlng,{
+       radius:radiusMeters,color,weight:2,
+       opacity:Math.max(.45,opacity),fillColor:color,
+       fillOpacity:Math.min(.22,opacity*.22),renderer:lightningCanvas
+      })
+     :L.circleMarker(latlng,{
+       radius:6,color,weight:2,opacity,
+       fillColor:color,fillOpacity:opacity,renderer:lightningCanvas
+      });
+    layer.bindPopup(popup).addTo(stscGroup);
+    plotted++;
+   });
+  });
+ }
+
+ const timeline=document.getElementById("stscTimeline");
+ timeline.max=String(stscFrames.length-1);
+ timeline.value=String(stscCurrentFrame);
+ timeline.disabled=stscFrames.length<2;
+ document.getElementById("stscTime").textContent=`Até ${latestTime}`;
+ document.getElementById("stscFrameNumber").textContent=
+  `${stscCurrentFrame+1} / ${stscFrames.length} · ${plotted} células/posições`;
+ document.getElementById("stscStatus").textContent=plotted
+  ?`${plotted} posições de células exibidas. Azul: registros antigos; vermelho: registros recentes.`
+  :"A consulta retornou quadros, mas sem coordenadas geográficas válidas.";
+}
+
+async function refreshSTSC(manual=false){
+ if(!stscEnabled)return;
+ if(stscRequest){
+  if(!manual)return;
+  stscRequest.abort();
+ }
+ const status=document.getElementById("stscStatus");
+ stscRequest=new AbortController();
+ const request=stscRequest;
+ const timeout=setTimeout(()=>request.abort(),20000);
+ try{
+  const params=new URLSearchParams({
+   api_key:API_KEY,
+   data:utcHour(),
+   anima:String(STSC_ANIMATION_FRAMES)
+  });
+  const response=await fetch(`${STSC_API}?${params.toString()}`,{
+   cache:"no-store",signal:request.signal
+  });
+  if(!response.ok){
+   let detail=`HTTP ${response.status}`;
+   try{
+    const body=await response.json();
+    detail=body?.message||body?.detail||body?.error||detail;
+   }catch{}
+   throw new Error(detail);
+  }
+  const json=await response.json();
+  const nextFrames=normalizeSTSCResponse(json);
+  const signature=JSON.stringify(nextFrames);
+  if(signature!==stscLastSignature){
+   stscLastSignature=signature;
+   stscFrames=nextFrames;
+   showSTSCFrame(stscFrames.length-1);
+  }
+  const total=stscFrames.reduce((sum,frame)=>sum+frame.positions.length,0);
+  status.textContent=total
+   ?`${total} posições recebidas em ${stscFrames.length} horário(s). Azul = antigas; vermelho = recentes.`
+   :"Consulta concluída, mas a REDEMET não retornou coordenadas STSC para o horário consultado.";
+ }catch(error){
+  if(error.name!=="AbortError"){
+   status.textContent=`Falha ao consultar STSC: ${error.message}. Verifique a chave e a disponibilidade da API.`;
+  }else if(manual){
+   status.textContent="Consulta STSC excedeu o tempo limite.";
+  }
+ }finally{
+  clearTimeout(timeout);
+  if(stscRequest===request)stscRequest=null;
+ }
+}
+
+function toggleSTSC(){
+ stscEnabled=!stscEnabled;
+ const button=document.getElementById("stscToggle");
+ const menuButton=document.getElementById("menu-stsc");
+ if(stscEnabled){
+  stscGroup.addTo(map);
+  button.textContent="DESATIVAR TSC";
+  button.classList.remove("primary");button.classList.add("danger");
+  if(menuButton)menuButton.textContent="DESATIVAR TSC";
+  document.getElementById("stscStatus").textContent="Consultando ocorrências do STSC da REDEMET...";
+  refreshSTSC();
+  stscTimer=setInterval(()=>refreshSTSC(),180000);
+ }else{
+  if(stscTimer)clearInterval(stscTimer);
+  stscTimer=null;
+  if(stscRequest)stscRequest.abort();
+  stscRequest=null;
+  stscGroup.clearLayers();
+  map.removeLayer(stscGroup);
+  button.textContent="ATIVAR TSC";
+  button.classList.remove("danger");button.classList.add("primary");
+  if(menuButton)menuButton.textContent="ATIVAR / DESATIVAR TSC";
+  document.getElementById("stscStatus").textContent="Camada desligada. Fonte: REDEMET/DECEA.";
+ }
+}
+
+function stepSTSCFrame(direction){
+ if(!stscFrames.length)return;
+ showSTSCFrame(stscCurrentFrame+direction);
+}
+
+document.getElementById("stscTimeline").addEventListener("input",event=>{
+ showSTSCFrame(Number(event.target.value));
+});
+
+document.getElementById("stscOpacity").addEventListener("input",()=>{
+ if(stscFrames.length)showSTSCFrame(stscCurrentFrame);
+});
+
+// Inicialização independente da API meteorológica.
+function ensureMapVisible(){
+ if(window.L && map){
+  requestAnimationFrame(()=>{
+   map.invalidateSize({pan:false,animate:false});
+  });
+ }
+}
+map.whenReady(()=>{
+ setStatus("MAPA BASE ATIVO",true);
+ document.getElementById("message").textContent=
+  "Mapa pronto. A refletividade é carregada separadamente.";
+ setTimeout(ensureMapVisible,250);
+ setTimeout(ensureMapVisible,1000);
+});
+window.addEventListener("resize",()=>setTimeout(ensureMapVisible,150));
+
+// Carrega o radar sem bloquear nem recriar o mapa-base.
+refreshRadar();
+
+let tornadoRiskMoveTimer=null;
+map.on("moveend",()=>{
+ Object.keys(forecastProducts).forEach(kind=>{
+  if(forecastProducts[kind].enabled){
+   clearTimeout(forecastProducts[kind].moveTimer);
+   forecastProducts[kind].moveTimer=setTimeout(()=>refreshForecastProduct(kind),1000);
+  }
+ });
+
+ if(!tornadoRiskEnabled)return;
+ clearTimeout(tornadoRiskMoveTimer);
+ tornadoRiskMoveTimer=setTimeout(()=>refreshTornadoRisk(),900);
+});
+
+</script>
+</body>
+</html>
