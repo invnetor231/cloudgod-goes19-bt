@@ -81,28 +81,47 @@ def latest_c13_key():
 
 def color_enhanced(bt):
     """
-    Infravermelho de onda longa em escala de cinza,
-    inspirado na apresentação visual do Himawari.
-    Entrada: temperatura de brilho em Kelvin.
+    Realce IR Color Enhanced para a banda 13 (10,3 µm) do GOES-19.
+
+    A entrada é temperatura de brilho em Kelvin. Superfícies quentes ficam
+    escuras/neutras; topos de nuvens progressivamente mais frios recebem
+    cores mais fortes. A paleta é interpolada continuamente para evitar
+    faixas duras entre níveis de temperatura.
     """
     bt = np.asarray(bt, dtype=np.float32)
 
-    # Faixa térmica de realce: nuvens frias ficam claras e
-    # superfícies/regiões quentes ficam escuras.
-    cold = 190.0
-    warm = 310.0
+    # Pontos de controle: temperatura (K), RGB.
+    # A faixa fria destaca convecção profunda e topos muito frios.
+    stops = np.array([
+        [315.0,   0,   0,   0],   # muito quente: preto
+        [300.0,  35,  35,  35],   # cinza escuro
+        [285.0,  85,  85,  85],   # cinza
+        [270.0, 150, 150, 150],   # cinza claro
+        [255.0, 225, 225, 225],   # quase branco
+        [245.0,  80, 180, 220],   # azul-ciano
+        [235.0,   0, 100, 220],   # azul
+        [225.0,  70,  40, 190],   # azul-violeta
+        [215.0, 145,  35, 190],   # violeta
+        [205.0, 210,  25, 150],   # magenta
+        [195.0, 245,  35,  85],   # rosa/vermelho
+        [185.0, 255, 110,  25],   # laranja
+        [175.0, 255, 220,  40],   # amarelo
+        [165.0, 255, 255, 255],   # branco: topo extremamente frio
+    ], dtype=np.float32)
 
-    normalized = np.clip(
-        (warm - bt) / (warm - cold),
-        0.0,
-        1.0
-    )
+    temperatures = stops[:, 0]
+    colors = stops[:, 1:4]
 
-    # Contraste suave para destacar os topos de nuvens frios.
-    enhanced = np.power(normalized, 0.78)
-    gray = np.clip(enhanced * 255.0, 0, 255).astype(np.uint8)
+    # np.interp exige eixo crescente; a tabela está do quente para o frio.
+    temperatures = temperatures[::-1]
+    colors = colors[::-1]
 
-    return np.stack([gray, gray, gray], axis=-1)
+    clipped = np.clip(bt, temperatures[0], temperatures[-1])
+    channels = [
+        np.interp(clipped, temperatures, colors[:, channel])
+        for channel in range(3)
+    ]
+    return np.stack(channels, axis=-1).clip(0, 255).astype(np.uint8)
 
 
 def make_png():
@@ -239,7 +258,7 @@ def metadata():
             "satellite": "GOES-19", "band": 13, "wavelength_um": 10.3,
             "product": "ABI-L2-CMIPF-M6C13", "variable": "CMI", "units": "K",
             "scan_time": item["scan"], "source_file": item["key"],
-            "enhancement": "Longwave Infrared Grayscale - Himawari Style",
+            "enhancement": "GOES-19 Band 13 IR Color Enhanced",
             "bounds": SOUTH_AMERICA,
             "image_size": [WIDTH, HEIGHT],
             "cache_age_seconds": round(time.time() - item["at"], 1),
