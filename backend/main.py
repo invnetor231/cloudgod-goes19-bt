@@ -5,6 +5,7 @@ import logging
 import threading
 import time
 import tempfile
+import urllib.request
 from datetime import datetime, timezone
 
 import boto3
@@ -32,7 +33,7 @@ WIDTH = max(300, int(os.getenv("BT_WIDTH", "1500")))
 HEIGHT = max(300, int(os.getenv("BT_HEIGHT", "1540")))
 CACHE_SECONDS = max(60, int(os.getenv("BT_CACHE_SECONDS", "240")))
 
-app = FastAPI(title="CLOUDGOD GOES-19 Brightness Temperature", version="1.1.0")
+app = FastAPI(title="CLOUDGOD GOES-19 IR Color Enhanced", version="1.2.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -79,58 +80,102 @@ def latest_c13_key():
     )
 
 
+# Tabela oficial de realce IR da DSA/INPE para GOES ABI canal 13.
+# Arquivo CPT público do projeto goes2image (INPE).
+DSA_CPT_URL = (
+    "https://raw.githubusercontent.com/dissm-inpe/goes2image/"
+    "master/resources/cpt/ir_realce_dsa_kelvin.cpt"
+)
+_DSA_LUT = None
+_DSA_LUT_LOCK = threading.Lock()
+
+
+def _load_dsa_lut():
+    """Carrega e interpreta a tabela CPT oficial da DSA/INPE, em Kelvin."""
+    global _DSA_LUT
+    if _DSA_LUT is not None:
+        return _DSA_LUT
+
+    with _DSA_LUT_LOCK:
+        if _DSA_LUT is not None:
+            return _DSA_LUT
+
+        request = urllib.request.Request(
+            DSA_CPT_URL,
+            headers={"User-Agent": "CLOUDGOD-GOES19/1.2"}
+        )
+        with urllib.request.urlopen(request, timeout=25) as response:
+            cpt_text = response.read().decode("utf-8")
+
+        temperatures = []
+        colors = []
+
+        for raw_line in cpt_text.splitlines():
+            line = raw_line.strip()
+            if not line or line.startswith(("#", "B", "F", "N")):
+                continue
+
+            parts = line.split()
+            try:
+                values = [float(value) for value in parts]
+            except ValueError:
+                continue
+
+            # CPT RGB: T0 R0 G0 B0 T1 R1 G1 B1
+            if len(values) >= 8:
+                t0, r0, g0, b0, t1, r1, g1, b1 = values[:8]
+                temperatures.extend((t0, t1))
+                colors.extend(((r0, g0, b0), (r1, g1, b1)))
+
+            # CPT grayscale: T0 G0 T1 G1
+            elif len(values) == 4:
+                t0, gray0, t1, gray1 = values
+                temperatures.extend((t0, t1))
+                colors.extend(
+                    ((gray0, gray0, gray0), (gray1, gray1, gray1))
+                )
+
+        if len(temperatures) < 10:
+            raise RuntimeError(
+                "A tabela oficial IR DSA/INPE não pôde ser carregada ou interpretada."
+            )
+
+        order = np.argsort(np.asarray(temperatures, dtype=np.float32))
+        temp_array = np.asarray(temperatures, dtype=np.float32)[order]
+        color_array = np.asarray(colors, dtype=np.float32)[order]
+
+        # Remove temperaturas duplicadas mantendo a última entrada da CPT.
+        unique_temp, reverse_indices = np.unique(temp_array[::-1], return_index=True)
+        keep = len(temp_array) - 1 - reverse_indices
+        keep = np.sort(keep)
+        temp_array = temp_array[keep]
+        color_array = color_array[keep]
+
+        _DSA_LUT = (temp_array, np.clip(color_array, 0, 255))
+        log.info(
+            "Tabela oficial IR DSA/INPE carregada: %s pontos, faixa %.2f–%.2f K",
+            len(temp_array), float(temp_array.min()), float(temp_array.max())
+        )
+        return _DSA_LUT
+
+
 def color_enhanced(bt):
     """
-    IR Color Enhanced inspirado na referência enviada:
-    fundo infravermelho em escala de cinza, nuvens frias em ciano/azul,
-    e núcleos convectivos em verde, amarelo, laranja, vermelho e tons escuros.
+    Aplica diretamente a tabela CPT IR Color Enhanced publicada pela DSA/INPE.
+    A entrada é a temperatura de brilho CMI real do GOES-19, em Kelvin.
+    Não cria classes térmicas nem inventa cores: usa a LUT oficial.
     """
     bt = np.asarray(bt, dtype=np.float32)
+    temperatures, colors = _load_dsa_lut()
 
-    # Base em escala de cinza: superfícies quentes escuras e nuvens frias claras.
-    gray_stops = np.array([
-        [315.0, 8], [300.0, 25], [285.0, 55], [270.0, 92],
-        [255.0, 135], [245.0, 175], [235.0, 205], [225.0, 230],
-    ], dtype=np.float32)
-    gray = np.interp(
-        np.clip(bt, gray_stops[-1, 0], gray_stops[0, 0]),
-        gray_stops[::-1, 0], gray_stops[::-1, 1]
-    )
-    rgb = np.repeat(gray[..., None], 3, axis=-1)
-
-    # Color enhancement para os topos de nuvens mais frios.
-    # A sequência reproduz o padrão visual da referência: ciano, azul,
-    # verde, amarelo, laranja, vermelho e núcleos escuros.
-    stops = np.array([
-        [240.0, 205, 220, 225],
-        [235.0, 115, 225, 255],
-        [230.0,   0, 155, 255],
-        [225.0,   0,  65, 255],
-        [220.0,   0,  35, 190],
-        [215.0,   0, 165,  55],
-        [210.0, 155, 220,   0],
-        [205.0, 255, 235,   0],
-        [200.0, 255, 150,   0],
-        [195.0, 245,  55,   0],
-        [190.0, 220,   0,   0],
-        [185.0,  95,  15,  15],
-        [180.0,  35,  35,  38],
-        [175.0, 115, 115, 120],
-        [165.0, 225, 225, 230],
-    ], dtype=np.float32)
-
-    temps = stops[:, 0][::-1]
-    colors = stops[:, 1:4][::-1]
-    clipped = np.clip(bt, temps[0], temps[-1])
-    enhanced = np.stack([
-        np.interp(clipped, temps, colors[:, channel])
+    valid = np.isfinite(bt)
+    safe_bt = np.where(valid, bt, temperatures[-1])
+    rgb = np.stack([
+        np.interp(safe_bt, temperatures, colors[:, channel])
         for channel in range(3)
     ], axis=-1)
 
-    # Mistura progressiva: mantém o fundo cinza e colore apenas os
-    # topos suficientemente frios, sem criar uma máscara abrupta.
-    blend = np.clip((240.0 - bt) / 5.0, 0.0, 1.0)[..., None]
-    rgb = rgb * (1.0 - blend) + enhanced * blend
+    rgb[~valid] = 0
     return np.clip(rgb, 0, 255).astype(np.uint8)
 
 def make_png():
@@ -267,7 +312,8 @@ def metadata():
             "satellite": "GOES-19", "band": 13, "wavelength_um": 10.3,
             "product": "ABI-L2-CMIPF-M6C13", "variable": "CMI", "units": "K",
             "scan_time": item["scan"], "source_file": item["key"],
-            "enhancement": "GOES-19 Band 13 IR Color Enhanced",
+            "enhancement": "INPE DSA official IR Color Enhancement CPT",
+            "enhancement_source": "dissm-inpe/goes2image: ir_realce_dsa_kelvin.cpt",
             "bounds": SOUTH_AMERICA,
             "image_size": [WIDTH, HEIGHT],
             "cache_age_seconds": round(time.time() - item["at"], 1),
@@ -290,6 +336,7 @@ def brightness_temperature():
                 "X-CLOUDGOD-Satellite": "GOES-19",
                 "X-CLOUDGOD-Band": "13",
                 "X-CLOUDGOD-Units": "K",
+                "X-CLOUDGOD-Enhancement": "INPE-DSA-IR-COLOR-ENHANCED",
                 "X-CLOUDGOD-Source": "NOAA ABI-L2-CMIPF-M6C13",
                 "X-CLOUDGOD-Scan-Time": str(item["scan"]),
             },
