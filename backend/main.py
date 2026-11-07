@@ -80,45 +80,58 @@ def latest_c13_key():
 
 
 def color_enhanced(bt):
-    """Weathernerds-style enhanced longwave IR palette for GOES-19 Band 13.
-
-    Maps brightness temperature (Kelvin) to a continuous false-colour scale:
-    warm surface/clear areas in dark blue-gray, low/mid cloud tops in gray-white,
-    and progressively colder/high cloud tops in yellow, orange, red and magenta.
+    """
+    IR Color Enhanced inspirado na referência enviada:
+    fundo infravermelho em escala de cinza, nuvens frias em ciano/azul,
+    e núcleos convectivos em verde, amarelo, laranja, vermelho e tons escuros.
     """
     bt = np.asarray(bt, dtype=np.float32)
 
-    # Temperature (K), Red, Green, Blue. Smoothly interpolated between levels.
-    # This is a Weathernerds-like meteorological enhancement, not their
-    # proprietary/internal lookup table.
+    # Base em escala de cinza: superfícies quentes escuras e nuvens frias claras.
+    gray_stops = np.array([
+        [315.0, 8], [300.0, 25], [285.0, 55], [270.0, 92],
+        [255.0, 135], [245.0, 175], [235.0, 205], [225.0, 230],
+    ], dtype=np.float32)
+    gray = np.interp(
+        np.clip(bt, gray_stops[-1, 0], gray_stops[0, 0]),
+        gray_stops[::-1, 0], gray_stops[::-1, 1]
+    )
+    rgb = np.repeat(gray[..., None], 3, axis=-1)
+
+    # Color enhancement para os topos de nuvens mais frios.
+    # A sequência reproduz o padrão visual da referência: ciano, azul,
+    # verde, amarelo, laranja, vermelho e núcleos escuros.
     stops = np.array([
-        [315.0,   5,   8,  20],  # very warm surface: near-black navy
-        [300.0,  12,  20,  42],  # warm surface
-        [290.0,  35,  48,  68],  # dark blue-gray
-        [280.0,  75,  88, 105],  # gray-blue
-        [270.0, 135, 145, 153],  # medium gray
-        [260.0, 205, 207, 198],  # pale gray
-        [250.0, 245, 241, 205],  # warm white
-        [240.0, 255, 232,  80],  # yellow: colder/taller clouds
-        [230.0, 255, 165,  35],  # orange
-        [220.0, 235,  70,  25],  # red-orange
-        [210.0, 190,  20,  35],  # red
-        [200.0, 145,   0,  75],  # deep red-magenta
-        [190.0, 100,   0, 125],  # magenta-purple
-        [180.0,  65,   0, 105],  # very cold tops
-        [170.0, 245, 220, 255],  # extreme cold: pale violet-white
-        [160.0, 255, 255, 255],  # exceptionally cold
+        [240.0, 205, 220, 225],
+        [235.0, 115, 225, 255],
+        [230.0,   0, 155, 255],
+        [225.0,   0,  65, 255],
+        [220.0,   0,  35, 190],
+        [215.0,   0, 165,  55],
+        [210.0, 155, 220,   0],
+        [205.0, 255, 235,   0],
+        [200.0, 255, 150,   0],
+        [195.0, 245,  55,   0],
+        [190.0, 220,   0,   0],
+        [185.0,  95,  15,  15],
+        [180.0,  35,  35,  38],
+        [175.0, 115, 115, 120],
+        [165.0, 225, 225, 230],
     ], dtype=np.float32)
 
-    temperatures = stops[:, 0][::-1]
+    temps = stops[:, 0][::-1]
     colors = stops[:, 1:4][::-1]
-    clipped = np.clip(bt, temperatures[0], temperatures[-1])
-    channels = [
-        np.interp(clipped, temperatures, colors[:, channel])
+    clipped = np.clip(bt, temps[0], temps[-1])
+    enhanced = np.stack([
+        np.interp(clipped, temps, colors[:, channel])
         for channel in range(3)
-    ]
-    return np.stack(channels, axis=-1).clip(0, 255).astype(np.uint8)
+    ], axis=-1)
 
+    # Mistura progressiva: mantém o fundo cinza e colore apenas os
+    # topos suficientemente frios, sem criar uma máscara abrupta.
+    blend = np.clip((240.0 - bt) / 5.0, 0.0, 1.0)[..., None]
+    rgb = rgb * (1.0 - blend) + enhanced * blend
+    return np.clip(rgb, 0, 255).astype(np.uint8)
 
 def make_png():
     """Download the newest full-disk C13 file, crop before reading CMI, and warp to lat/lon."""
