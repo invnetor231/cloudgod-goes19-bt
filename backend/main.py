@@ -5,7 +5,6 @@ import logging
 import threading
 import time
 import tempfile
-import urllib.request
 from datetime import datetime, timezone
 
 import boto3
@@ -27,13 +26,13 @@ logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"))
 log = logging.getLogger("cloudgod.bt")
 
 BUCKET = "noaa-goes19"
-PRODUCT_PREFIX = "ABI-L2-CMIPF"
+PRODUCT_PREFIX = "ABI-L1b-RadF"
 SOUTH_AMERICA = (-82.0, -56.5, -32.0, 13.5)  # west, south, east, north
 WIDTH = max(300, int(os.getenv("BT_WIDTH", "1500")))
 HEIGHT = max(300, int(os.getenv("BT_HEIGHT", "1540")))
 CACHE_SECONDS = max(60, int(os.getenv("BT_CACHE_SECONDS", "240")))
 
-app = FastAPI(title="CLOUDGOD GOES-19 IR Color Enhanced", version="1.2.0")
+app = FastAPI(title="CLOUDGOD GOES-19 IR Color Enhanced", version="2.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -75,115 +74,89 @@ def latest_c13_key():
             log.info("Arquivo NOAA selecionado: %s", chosen["Key"])
             return chosen["Key"]
     raise RuntimeError(
-        "Nenhum arquivo ABI-L2-CMIPF-M6C13 recente foi encontrado no bucket público NOAA "
+        "Nenhum arquivo ABI-L1b-RadF-M6C13 recente foi encontrado no bucket público NOAA "
         "nas últimas 8 horas. Verifique a publicação do produto."
     )
 
 
-# Tabela oficial de realce IR da DSA/INPE para GOES ABI canal 13.
-# Arquivo CPT público do projeto goes2image (INPE).
-DSA_CPT_URL = (
-    "https://raw.githubusercontent.com/dissm-inpe/goes2image/"
-    "main/resources/cpt/ir_realce_dsa_kelvin.cpt"
+# Tabela oficial de cores NOAA/NESDIS/STAR para canais infravermelhos 11–15.
+# A barra publicada pela NOAA contém a escala em °C (-110 a +57 °C).
+NOAA_IR_COLORBAR_URL = (
+    "https://www.goes.noaa.gov/images/colorbars/ColorBar450Bands11-15_horz.png"
 )
-_DSA_LUT = None
-_DSA_LUT_LOCK = threading.Lock()
+_IR_LUT = None
+_IR_LUT_LOCK = threading.Lock()
 
 
-def _load_dsa_lut():
-    """Carrega e interpreta a tabela CPT oficial da DSA/INPE, em Kelvin."""
-    global _DSA_LUT
-    if _DSA_LUT is not None:
-        return _DSA_LUT
+def load_noaa_ir_lut():
+    """Baixa a barra oficial NOAA e transforma seus pixels em uma LUT contínua."""
+    global _IR_LUT
+    if _IR_LUT is not None:
+        return _IR_LUT
 
-    with _DSA_LUT_LOCK:
-        if _DSA_LUT is not None:
-            return _DSA_LUT
+    with _IR_LUT_LOCK:
+        if _IR_LUT is not None:
+            return _IR_LUT
 
+        import urllib.request
         request = urllib.request.Request(
-            DSA_CPT_URL,
-            headers={"User-Agent": "CLOUDGOD-GOES19/1.2"}
+            NOAA_IR_COLORBAR_URL,
+            headers={"User-Agent": "CLOUDGOD-GOES19-IR/2.0"}
         )
         try:
             with urllib.request.urlopen(request, timeout=25) as response:
-                cpt_text = response.read().decode("utf-8")
+                palette_bytes = response.read()
         except Exception as exc:
             raise RuntimeError(
-                f"Falha ao baixar a tabela oficial DSA/INPE ({DSA_CPT_URL}): {exc}"
+                f"Não foi possível obter a tabela oficial IR da NOAA: {exc}"
             ) from exc
 
-        temperatures = []
-        colors = []
+        with Image.open(io.BytesIO(palette_bytes)) as palette_image:
+            bar = np.asarray(palette_image.convert("RGB"), dtype=np.float32)
 
-        for raw_line in cpt_text.splitlines():
-            line = raw_line.strip()
-            if not line or line.startswith(("#", "B", "F", "N")):
-                continue
+        if bar.ndim != 3 or bar.shape[1] < 100:
+            raise RuntimeError("A barra oficial de cores NOAA retornou formato inválido.")
 
-            parts = line.split()
-            try:
-                values = [float(value) for value in parts]
-            except ValueError:
-                continue
+        # Usa a mediana vertical para reduzir a influência de artefatos de borda.
+        y0 = max(0, int(bar.shape[0] * 0.25))
+        y1 = min(bar.shape[0], int(bar.shape[0] * 0.75) + 1)
+        strip = np.median(bar[y0:y1, :, :], axis=0)
 
-            # CPT RGB: T0 R0 G0 B0 T1 R1 G1 B1
-            if len(values) >= 8:
-                t0, r0, g0, b0, t1, r1, g1, b1 = values[:8]
-                temperatures.extend((t0, t1))
-                colors.extend(((r0, g0, b0), (r1, g1, b1)))
+        # Escala impressa na própria legenda NOAA: -110 °C até +57 °C.
+        # A LUT é amostrada da barra publicada, não criada por cores arbitrárias.
+        source_x = np.linspace(-110.0, 57.0, strip.shape[0], dtype=np.float32)
+        target_c = np.linspace(-110.0, 57.0, 2048, dtype=np.float32)
+        lut = np.stack([
+            np.interp(target_c, source_x, strip[:, channel])
+            for channel in range(3)
+        ], axis=-1)
 
-            # CPT grayscale: T0 G0 T1 G1
-            elif len(values) == 4:
-                t0, gray0, t1, gray1 = values
-                temperatures.extend((t0, t1))
-                colors.extend(
-                    ((gray0, gray0, gray0), (gray1, gray1, gray1))
-                )
-
-        if len(temperatures) < 10:
-            raise RuntimeError(
-                "A tabela oficial IR DSA/INPE não pôde ser carregada ou interpretada."
-            )
-
-        order = np.argsort(np.asarray(temperatures, dtype=np.float32))
-        temp_array = np.asarray(temperatures, dtype=np.float32)[order]
-        color_array = np.asarray(colors, dtype=np.float32)[order]
-
-        # Remove temperaturas duplicadas mantendo a última entrada da CPT.
-        _, reverse_indices = np.unique(temp_array[::-1], return_index=True)
-        keep = np.sort(len(temp_array) - 1 - reverse_indices)
-        temp_array = temp_array[keep]
-        color_array = color_array[keep]
-
-        _DSA_LUT = (temp_array, np.clip(color_array, 0, 255))
-        log.info(
-            "Tabela oficial IR DSA/INPE carregada: %s pontos, faixa %.2f–%.2f K",
-            len(temp_array), float(temp_array.min()), float(temp_array.max())
-        )
-        return _DSA_LUT
+        _IR_LUT = (target_c, np.clip(lut, 0, 255))
+        log.info("Tabela IR oficial NOAA/NESDIS/STAR carregada: %s amostras", len(target_c))
+        return _IR_LUT
 
 
-def color_enhanced(bt):
+def color_enhanced(brightness_temperature_k):
     """
-    Aplica diretamente a tabela CPT IR Color Enhanced publicada pela DSA/INPE.
-    A entrada é a temperatura de brilho CMI real do GOES-19, em Kelvin.
-    Não cria classes térmicas nem inventa cores: usa a LUT oficial.
+    Aplica a tabela IR Color Enhanced publicada pela NOAA/NESDIS/STAR.
+    A fonte física é a radiância L1b calibrada do GOES-19; a radiância é
+    convertida para temperatura de brilho apenas para indexar a tabela IR.
     """
-    bt = np.asarray(bt, dtype=np.float32)
-    temperatures, colors = _load_dsa_lut()
-
-    valid = np.isfinite(bt)
-    safe_bt = np.where(valid, bt, temperatures[-1])
+    bt_k = np.asarray(brightness_temperature_k, dtype=np.float32)
+    temp_c, colors = load_noaa_ir_lut()
+    bt_c = bt_k - 273.15
+    valid = np.isfinite(bt_c)
+    safe = np.where(valid, bt_c, 57.0)
     rgb = np.stack([
-        np.interp(safe_bt, temperatures, colors[:, channel])
+        np.interp(safe, temp_c, colors[:, channel])
         for channel in range(3)
     ], axis=-1)
-
     rgb[~valid] = 0
     return np.clip(rgb, 0, 255).astype(np.uint8)
 
+
 def make_png():
-    """Download the newest full-disk C13 file, crop before reading CMI, and warp to lat/lon."""
+    """Download GOES-19 L1b Band 13 radiance, calibrate, crop and warp to lat/lon."""
     key = latest_c13_key()
     obj = s3.get_object(Bucket=BUCKET, Key=key)
     raw = obj["Body"].read()
@@ -195,12 +168,17 @@ def make_png():
         tmp.write(raw)
         tmp.flush()
         with Dataset(tmp.name, mode="r") as ds:
-            if "CMI" not in ds.variables:
-                raise RuntimeError("O NetCDF não contém a variável CMI.")
-            variable = ds.variables["CMI"]
-            units = str(getattr(variable, "units", "K")).strip().lower()
-            if units not in ("k", "kelvin"):
-                raise RuntimeError(f"Unidade CMI inesperada: {units!r}; esperado Kelvin.")
+            if "Rad" not in ds.variables:
+                raise RuntimeError("O NetCDF ABI-L1b não contém a variável Rad.")
+
+            variable = ds.variables["Rad"]
+            rad_units = str(getattr(variable, "units", "")).strip()
+            planck_fk1 = float(getattr(ds, "planck_fk1", np.nan))
+            planck_fk2 = float(getattr(ds, "planck_fk2", np.nan))
+            planck_bc1 = float(getattr(ds, "planck_bc1", np.nan))
+            planck_bc2 = float(getattr(ds, "planck_bc2", np.nan))
+            if not all(np.isfinite(v) for v in (planck_fk1, planck_fk2, planck_bc1, planck_bc2)):
+                raise RuntimeError("Coeficientes Planck ausentes no arquivo ABI-L1b.")
 
             x = np.asarray(ds.variables["x"][:], dtype=np.float64)
             y = np.asarray(ds.variables["y"][:], dtype=np.float64)
@@ -219,8 +197,7 @@ def make_png():
                 f"+proj=geos +h={h} +lon_0={lon0} +sweep={sweep} "
                 f"+a={a} +b={b} +units=m +no_defs"
             )
-            # Calcula a janela da América do Sul na projeção nativa e lê apenas
-            # essa parte do CMI. Isso reduz muito o pico de RAM no Render.
+            # Calcula a janela da América do Sul e lê apenas a parte necessária de Rad.
             west, south, east, north = SOUTH_AMERICA
             transformer = Transformer.from_crs("EPSG:4326", src_crs, always_xy=True)
             lon_samples = np.linspace(west, east, 9)
@@ -238,11 +215,18 @@ def make_png():
             ix = np.where((x_m >= xmin - 180000) & (x_m <= xmax + 180000))[0]
             iy = np.where((y_m >= ymin - 180000) & (y_m <= ymax + 180000))[0]
             if ix.size < 2 or iy.size < 2:
-                raise RuntimeError("Não foi possível recortar a janela CMI da América do Sul.")
+                raise RuntimeError("Não foi possível recortar a janela Rad da América do Sul.")
             x0, x1 = int(ix[0]), int(ix[-1]) + 1
             y0, y1 = int(iy.min()), int(iy.max()) + 1
-            cmi = variable[y0:y1, x0:x1]
-            bt = np.asarray(np.ma.filled(cmi, np.nan), dtype=np.float32)
+            rad_ma = variable[y0:y1, x0:x1]
+            radiance = np.asarray(np.ma.filled(rad_ma, np.nan), dtype=np.float32)
+
+            # ABI L1b emissive bands store spectral radiance. NetCDF4 applies
+            # scale_factor/add_offset automatically when reading Rad.
+            radiance[(radiance <= 0) | (~np.isfinite(radiance))] = np.nan
+            denominator = np.log1p(planck_fk1 / radiance)
+            bt = (planck_fk2 / denominator - planck_bc1) / planck_bc2
+            bt = np.asarray(bt, dtype=np.float32)
             x_crop = x[x0:x1]
             y_crop = y[y0:y1]
 
@@ -298,10 +282,11 @@ def get_cached_product():
 @app.get("/health")
 def health():
     return {
-        "service": "CLOUDGOD GOES-19 BT",
+        "service": "CLOUDGOD GOES-19 IR Color Enhanced",
         "status": "online",
-        "source": "NOAA ABI-L2-CMIPF-M6C13",
-        "units": "K",
+        "source": "NOAA ABI-L1b-RadF-M6C13",
+        "source_units": "spectral radiance (ABI L1b Rad)",
+        "display_calibration": "Planck brightness temperature for NOAA IR enhancement table",
         "image_endpoint": "/bt.png",
         "metadata_endpoint": "/bt.json",
         "version": app.version,
@@ -314,10 +299,11 @@ def metadata():
         item = get_cached_product()
         return {
             "satellite": "GOES-19", "band": 13, "wavelength_um": 10.3,
-            "product": "ABI-L2-CMIPF-M6C13", "variable": "CMI", "units": "K",
+            "product": "ABI-L1b-RadF-M6C13", "variable": "Rad", "source_units": "spectral radiance",
+        "display_calibration": "Planck brightness temperature for NOAA IR enhancement table",
             "scan_time": item["scan"], "source_file": item["key"],
-            "enhancement": "INPE DSA official IR Color Enhancement CPT",
-            "enhancement_source": "dissm-inpe/goes2image: ir_realce_dsa_kelvin.cpt",
+            "enhancement": "NOAA/NESDIS/STAR official IR color-enhanced bar (bands 11-15)",
+            "enhancement_table": NOAA_IR_COLORBAR_URL,
             "bounds": SOUTH_AMERICA,
             "image_size": [WIDTH, HEIGHT],
             "cache_age_seconds": round(time.time() - item["at"], 1),
@@ -339,9 +325,9 @@ def brightness_temperature():
                 "Access-Control-Allow-Origin": "*",
                 "X-CLOUDGOD-Satellite": "GOES-19",
                 "X-CLOUDGOD-Band": "13",
-                "X-CLOUDGOD-Units": "K",
-                "X-CLOUDGOD-Enhancement": "INPE-DSA-IR-COLOR-ENHANCED",
-                "X-CLOUDGOD-Source": "NOAA ABI-L2-CMIPF-M6C13",
+                "X-CLOUDGOD-Units": "ABI L1b spectral radiance",
+                "X-CLOUDGOD-Enhancement": "NOAA-NESDIS-STAR-IR-COLOR-ENHANCED",
+                "X-CLOUDGOD-Source": "NOAA ABI-L1b-RadF-M6C13",
                 "X-CLOUDGOD-Scan-Time": str(item["scan"]),
             },
         )
