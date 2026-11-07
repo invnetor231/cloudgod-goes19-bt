@@ -84,7 +84,7 @@ def latest_c13_key():
 # Arquivo CPT público do projeto goes2image (INPE).
 DSA_CPT_URL = (
     "https://raw.githubusercontent.com/dissm-inpe/goes2image/"
-    "master/resources/cpt/ir_realce_dsa_kelvin.cpt"
+    "main/resources/cpt/ir_realce_dsa_kelvin.cpt"
 )
 _DSA_LUT = None
 _DSA_LUT_LOCK = threading.Lock()
@@ -104,8 +104,13 @@ def _load_dsa_lut():
             DSA_CPT_URL,
             headers={"User-Agent": "CLOUDGOD-GOES19/1.2"}
         )
-        with urllib.request.urlopen(request, timeout=25) as response:
-            cpt_text = response.read().decode("utf-8")
+        try:
+            with urllib.request.urlopen(request, timeout=25) as response:
+                cpt_text = response.read().decode("utf-8")
+        except Exception as exc:
+            raise RuntimeError(
+                f"Falha ao baixar a tabela oficial DSA/INPE ({DSA_CPT_URL}): {exc}"
+            ) from exc
 
         temperatures = []
         colors = []
@@ -145,9 +150,8 @@ def _load_dsa_lut():
         color_array = np.asarray(colors, dtype=np.float32)[order]
 
         # Remove temperaturas duplicadas mantendo a última entrada da CPT.
-        unique_temp, reverse_indices = np.unique(temp_array[::-1], return_index=True)
-        keep = len(temp_array) - 1 - reverse_indices
-        keep = np.sort(keep)
+        _, reverse_indices = np.unique(temp_array[::-1], return_index=True)
+        keep = np.sort(len(temp_array) - 1 - reverse_indices)
         temp_array = temp_array[keep]
         color_array = color_array[keep]
 
