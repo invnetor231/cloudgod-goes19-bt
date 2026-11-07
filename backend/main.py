@@ -80,42 +80,38 @@ def latest_c13_key():
 
 
 def color_enhanced(bt):
-    """
-    Realce IR Color Enhanced para a banda 13 (10,3 µm) do GOES-19.
+    """Weathernerds-style enhanced longwave IR palette for GOES-19 Band 13.
 
-    A entrada é temperatura de brilho em Kelvin. Superfícies quentes ficam
-    escuras/neutras; topos de nuvens progressivamente mais frios recebem
-    cores mais fortes. A paleta é interpolada continuamente para evitar
-    faixas duras entre níveis de temperatura.
+    Maps brightness temperature (Kelvin) to a continuous false-colour scale:
+    warm surface/clear areas in dark blue-gray, low/mid cloud tops in gray-white,
+    and progressively colder/high cloud tops in yellow, orange, red and magenta.
     """
     bt = np.asarray(bt, dtype=np.float32)
 
-    # Pontos de controle: temperatura (K), RGB.
-    # A faixa fria destaca convecção profunda e topos muito frios.
+    # Temperature (K), Red, Green, Blue. Smoothly interpolated between levels.
+    # This is a Weathernerds-like meteorological enhancement, not their
+    # proprietary/internal lookup table.
     stops = np.array([
-        [315.0,   0,   0,   0],   # muito quente: preto
-        [300.0,  35,  35,  35],   # cinza escuro
-        [285.0,  85,  85,  85],   # cinza
-        [270.0, 150, 150, 150],   # cinza claro
-        [255.0, 225, 225, 225],   # quase branco
-        [245.0,  80, 180, 220],   # azul-ciano
-        [235.0,   0, 100, 220],   # azul
-        [225.0,  70,  40, 190],   # azul-violeta
-        [215.0, 145,  35, 190],   # violeta
-        [205.0, 210,  25, 150],   # magenta
-        [195.0, 245,  35,  85],   # rosa/vermelho
-        [185.0, 255, 110,  25],   # laranja
-        [175.0, 255, 220,  40],   # amarelo
-        [165.0, 255, 255, 255],   # branco: topo extremamente frio
+        [315.0,   5,   8,  20],  # very warm surface: near-black navy
+        [300.0,  12,  20,  42],  # warm surface
+        [290.0,  35,  48,  68],  # dark blue-gray
+        [280.0,  75,  88, 105],  # gray-blue
+        [270.0, 135, 145, 153],  # medium gray
+        [260.0, 205, 207, 198],  # pale gray
+        [250.0, 245, 241, 205],  # warm white
+        [240.0, 255, 232,  80],  # yellow: colder/taller clouds
+        [230.0, 255, 165,  35],  # orange
+        [220.0, 235,  70,  25],  # red-orange
+        [210.0, 190,  20,  35],  # red
+        [200.0, 145,   0,  75],  # deep red-magenta
+        [190.0, 100,   0, 125],  # magenta-purple
+        [180.0,  65,   0, 105],  # very cold tops
+        [170.0, 245, 220, 255],  # extreme cold: pale violet-white
+        [160.0, 255, 255, 255],  # exceptionally cold
     ], dtype=np.float32)
 
-    temperatures = stops[:, 0]
-    colors = stops[:, 1:4]
-
-    # np.interp exige eixo crescente; a tabela está do quente para o frio.
-    temperatures = temperatures[::-1]
-    colors = colors[::-1]
-
+    temperatures = stops[:, 0][::-1]
+    colors = stops[:, 1:4][::-1]
     clipped = np.clip(bt, temperatures[0], temperatures[-1])
     channels = [
         np.interp(clipped, temperatures, colors[:, channel])
