@@ -173,12 +173,62 @@ def make_png():
 
             variable = ds.variables["Rad"]
             rad_units = str(getattr(variable, "units", "")).strip()
-            planck_fk1 = float(getattr(ds, "planck_fk1", np.nan))
-            planck_fk2 = float(getattr(ds, "planck_fk2", np.nan))
-            planck_bc1 = float(getattr(ds, "planck_bc1", np.nan))
-            planck_bc2 = float(getattr(ds, "planck_bc2", np.nan))
-            if not all(np.isfinite(v) for v in (planck_fk1, planck_fk2, planck_bc1, planck_bc2)):
-                raise RuntimeError("Coeficientes Planck ausentes no arquivo ABI-L1b.")
+
+            # No ABI-L1b da NOAA, os coeficientes Planck normalmente são
+            # VARIÁVEIS escalares do NetCDF, e não atributos globais do arquivo.
+            # Procuramos primeiro em ds.variables, depois nos atributos globais
+            # e, por último, nos atributos da variável Rad (compatibilidade).
+            def read_planck_coefficient(name):
+                value = None
+
+                if name in ds.variables:
+                    raw_value = ds.variables[name][...]
+                    raw_value = np.ma.filled(raw_value, np.nan)
+                    values = np.asarray(raw_value, dtype=np.float64).reshape(-1)
+                    values = values[np.isfinite(values) & (values != -999.0)]
+                    if values.size:
+                        value = float(values[0])
+
+                if value is None and name in ds.ncattrs():
+                    try:
+                        candidate = float(ds.getncattr(name))
+                        if np.isfinite(candidate) and candidate != -999.0:
+                            value = candidate
+                    except (TypeError, ValueError):
+                        pass
+
+                if value is None and name in variable.ncattrs():
+                    try:
+                        candidate = float(variable.getncattr(name))
+                        if np.isfinite(candidate) and candidate != -999.0:
+                            value = candidate
+                    except (TypeError, ValueError):
+                        pass
+
+                return value
+
+            planck_fk1 = read_planck_coefficient("planck_fk1")
+            planck_fk2 = read_planck_coefficient("planck_fk2")
+            planck_bc1 = read_planck_coefficient("planck_bc1")
+            planck_bc2 = read_planck_coefficient("planck_bc2")
+            coefficients = (planck_fk1, planck_fk2, planck_bc1, planck_bc2)
+            if not all(v is not None and np.isfinite(v) for v in coefficients):
+                missing = [
+                    name for name, value in zip(
+                        ("planck_fk1", "planck_fk2", "planck_bc1", "planck_bc2"),
+                        coefficients,
+                    ) if value is None or not np.isfinite(value)
+                ]
+                raise RuntimeError(
+                    "Coeficientes Planck não encontrados como variáveis ou atributos "
+                    f"no NetCDF ABI-L1b: {', '.join(missing)}."
+                )
+            if planck_fk1 <= 0 or planck_fk2 <= 0 or planck_bc2 == 0:
+                raise RuntimeError("Coeficientes Planck inválidos no NetCDF ABI-L1b.")
+            log.info(
+                "Coeficientes Planck lidos do NetCDF: fk1=%s fk2=%s bc1=%s bc2=%s; Rad units=%s",
+                planck_fk1, planck_fk2, planck_bc1, planck_bc2, rad_units,
+            )
 
             x = np.asarray(ds.variables["x"][:], dtype=np.float64)
             y = np.asarray(ds.variables["y"][:], dtype=np.float64)
