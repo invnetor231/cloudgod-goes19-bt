@@ -133,10 +133,19 @@ input[type=range]{width:100%;accent-color:var(--blue)}
 .tornado-risk-label{font: bold 9px Arial,sans-serif;color:#fff;text-shadow:0 1px 3px #000,1px 0 3px #000;text-align:center;white-space:nowrap}
 .radar-station-icon{background:transparent;border:0;text-align:center;font-size:23px;line-height:30px;filter:drop-shadow(0 1px 2px #fff)}
 /* RAIOS E RELÂMPAGOS */
-.lightning-marker{width:27px;height:27px;border-radius:50%;display:grid;place-items:center;border:2px solid #fff;box-shadow:0 1px 7px #182b45aa;font-size:17px;line-height:1;color:#fff}
+.lightning-flash-icon{background:transparent!important;border:0!important}
+.lightning-flash-dot{display:block;width:10px;height:10px;border-radius:50%;background:var(--flash-color,#f4d43b);border:1px solid #fff;box-shadow:0 0 5px 2px var(--flash-color,#f4d43b),0 0 15px 6px var(--flash-color,#f4d43b);opacity:0;transform:scale(.2);animation:lightningFlash .85s ease-out forwards}
+@keyframes lightningFlash{
+ 0%{opacity:0;transform:scale(.2);box-shadow:0 0 0 0 transparent}
+ 12%{opacity:1;transform:scale(1.35);box-shadow:0 0 7px 4px var(--flash-color),0 0 22px 10px var(--flash-color)}
+ 38%{opacity:1;transform:scale(1);box-shadow:0 0 5px 2px var(--flash-color),0 0 15px 7px var(--flash-color)}
+ 100%{opacity:0;transform:scale(.35);box-shadow:0 0 0 0 transparent}
+}
 .lightning-legend{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:9px;font-size:9px;color:#647b95}
 .lightning-legend span{display:inline-flex;align-items:center;gap:3px}
-.lightning-dot{width:9px;height:9px;border-radius:50%;display:inline-block;border:1px solid #0002}
+.lightning-dot{width:10px;height:10px;border-radius:50%;display:inline-block;border:1px solid #0002}
+.lightning-static-point{filter:drop-shadow(0 1px 2px #26384b88)}
+.leaflet-radar-raster{transition:opacity .16s linear}
 .lightning-status{font-size:10px;line-height:1.5;color:#647b95;margin-top:8px}
 
 /* TSC / STSC - ocorrências de tempo severo convectivo */
@@ -305,15 +314,93 @@ body.economy ~ .footer{display:none!important}
   filter:none!important;
 }
 
+/* ACABAMENTO VISUAL CLOUDGOD · painel meteorológico */
+:root{
+ --blue:#1677ff;
+ --bg:#f3f7fd;
+ --text:#172f4c;
+ --muted:#8293a8;
+ --border:#e3ebf5;
+}
+body{background:linear-gradient(180deg,#f8fbff 0%,#edf4fc 100%)}
+header{
+ height:82px;
+ padding:0 24px;
+ box-shadow:0 3px 18px #244d7410;
+}
+.logo{
+ width:54px;height:54px;border-radius:17px;
+ box-shadow:0 5px 16px #1677ff2a;
+}
+.brand h1{font-size:22px;letter-spacing:2px}
+.brand small{font-size:10px;letter-spacing:1.2px}
+.status{padding:11px 15px;font-size:11px}
+main{padding:20px}
+.dashboard{grid-template-columns:minmax(0,1fr) 320px;gap:17px}
+.map-card,.panel,.loop{
+ border-radius:20px;
+ box-shadow:0 8px 28px #244d7412;
+}
+.map-head{height:76px;padding:14px 19px}
+.map-head h2{font-size:16px}
+.map-head small{font-size:11px}
+button{border-radius:11px;padding:12px 15px;font-size:12px}
+.primary{background:linear-gradient(115deg,#0875ff,#36a2ff)}
+.panel{padding:17px}
+.panel h3{font-size:13px}
+.product{padding:14px;border-radius:13px;min-height:66px}
+.product strong{font-size:12px}
+.product small{font-size:10px}
+.info{border:1px solid #e5eef9;background:#f1f7ff}
+#map{height:calc(100vh - 245px);min-height:500px}
+.lightning-legend{
+ display:grid;
+ grid-template-columns:repeat(4,minmax(0,1fr));
+ gap:6px;
+ padding:12px 9px;
+ border:1px solid #d8e7fb;
+ border-radius:12px;
+ background:#f8fbff;
+}
+.lightning-legend span{
+ justify-content:center;
+ flex-direction:column;
+ gap:5px;
+ font-size:10px;
+ font-weight:700;
+ color:#405875;
+ text-align:center;
+}
+.lightning-dot{width:15px;height:15px;border:1px solid #ffffff;box-shadow:0 1px 4px #233b5528}
+.lightning-status{padding:8px 9px;background:#f5f8fc;border-radius:9px}
+#lightningSpeed{font-weight:700}
+.lightning-static-point{filter:drop-shadow(0 1px 3px #172f4c66)}
+.lightning-flash-dot{width:12px;height:12px}
+.loop{padding:18px}
+.loop h3{font-size:14px}
 @media(max-width:850px){
 header{padding:0 12px}
 .brand h1{font-size:18px}
 .dashboard{grid-template-columns:1fr}
-#map{height:58vh;min-height:390px}
+#map{height:64vh;min-height:420px}
+.map-head{height:auto;min-height:72px;gap:8px}
+.mode-buttons{flex-wrap:wrap;justify-content:flex-end}
+.mode-button{padding:9px 10px}
 .side{display:grid;grid-template-columns:1fr 1fr}
 .side .panel:last-child{grid-column:1/-1}
 }
 @media(max-width:480px){
+header{height:72px}
+.logo{width:45px;height:45px}
+.brand h1{font-size:18px}
+.brand small{font-size:8px}
+.status{font-size:9px;padding:8px 9px}
+main{padding:12px}
+.map-head{align-items:flex-start;flex-direction:column}
+.mode-buttons{width:100%;justify-content:stretch}
+.mode-buttons button{flex:1}
+#map{height:62vh;min-height:380px}
+.panel{padding:14px}
 .side{grid-template-columns:1fr}
 .side .panel:last-child{grid-column:auto}
 }
@@ -337,6 +424,70 @@ header{padding:0 12px}
 .satellite-state{font-size:10px;line-height:1.5;margin-top:8px;color:#60748b}
 .satellite-state.active{color:#13834b}
 .satellite-stamp{font-size:10px;font-weight:700;margin-top:5px;color:#294c70}
+
+/* Exportação de imagens meteorológicas */
+.export-panel{border-left:3px solid #1677ff}
+.export-panel .export-help{font-size:10px;line-height:1.5;color:#71839a;margin:7px 0}
+.export-panel button{width:100%;margin-top:7px}
+.export-state{font-size:10px;line-height:1.5;color:#60748b;margin-top:8px;min-height:28px}
+.export-state.active{color:#13834b}
+body.photo-pick #map{cursor:crosshair!important}
+body.photo-pick #map .leaflet-grab{cursor:crosshair!important}
+
+/* MODELOS NUMERICOS - CLOUDGOD */
+.mn-panel{margin-top:15px;background:#fff;border:1px solid var(--border);border-radius:17px;overflow:hidden;box-shadow:0 8px 30px #234b7710}
+.mn-head{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.mn-head h2{font-size:15px;margin:0 0 5px}
+.mn-head small{font-size:10px;color:var(--muted)}
+.mn-controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:14px 18px;background:#fbfdff}
+.mn-controls label{margin:0 0 6px}
+.mn-frame-wrap{position:relative;background:#edf3f8;min-height:560px}
+#mnFrame{width:100%;height:560px;border:0;display:block;background:#fff}
+.mn-fallback{padding:13px 18px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-top:1px solid var(--border)}
+.mn-fallback small{font-size:9px;color:var(--muted);flex:1;min-width:190px;line-height:1.5}
+.mn-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;padding:14px 18px}
+.mn-item{border:1px solid var(--border);border-radius:11px;padding:11px;background:#fbfdff;min-height:75px}
+.mn-item b{font-size:10px;display:block;margin-bottom:5px}
+.mn-item span{font-size:9px;color:var(--muted);line-height:1.4}
+.mn-note{margin:0 18px 15px;padding:11px;border-radius:10px;background:#fff8e9;color:#856327;font-size:10px;line-height:1.55}
+.mn-source{font-size:9px;color:var(--muted);padding:0 18px 14px;line-height:1.5}
+@media(max-width:850px){.mn-controls{grid-template-columns:1fr 1fr}.mn-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.mn-frame-wrap,#mnFrame{min-height:500px;height:500px}}
+@media(max-width:480px){.mn-controls{grid-template-columns:1fr}.mn-head{align-items:flex-start;flex-direction:column}.mn-grid{grid-template-columns:1fr 1fr}.mn-frame-wrap,#mnFrame{min-height:440px;height:440px}}
+
+/* RADIOSSONDAGEM SKEW-T - CLOUDGOD */
+.rs-panel{margin-top:15px;background:#fff;border:1px solid var(--border);border-radius:17px;overflow:hidden;box-shadow:0 8px 30px #234b7710}
+.rs-head{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.rs-head h2{font-size:15px;margin:0 0 5px}
+.rs-head small{font-size:10px;color:var(--muted)}
+.rs-controls{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:14px 18px;background:#fbfdff}
+.rs-controls label{margin:0 0 6px}
+.rs-controls input,.rs-controls select,.rs-paste textarea{width:100%;padding:10px;border:1px solid var(--border);border-radius:9px;background:#f8faff;color:#29415d;font:11px Arial,sans-serif}
+.rs-actions{display:flex;gap:8px;flex-wrap:wrap;padding:0 18px 14px}
+.rs-actions button{flex:1;min-width:145px}
+.rs-source-note{margin:0 18px 14px;padding:11px;border-radius:10px;background:#eef6ff;color:#42617f;font-size:10px;line-height:1.55}
+.rs-chart-grid{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(220px,.8fr);gap:12px;padding:0 18px 14px}
+.rs-chart-card{border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#fbfdff;min-width:0}
+.rs-chart-title{padding:10px 12px;font-size:10px;font-weight:bold;color:#29415d;border-bottom:1px solid var(--border)}
+.rs-chart-card canvas{width:100%;height:auto;display:block;background:#fff}
+.rs-chart-empty{padding:14px;font-size:10px;color:var(--muted);line-height:1.5}
+.rs-paste{padding:0 18px 14px}
+.rs-paste summary{font-size:10px;font-weight:bold;color:#315477;cursor:pointer;padding:9px 0}
+.rs-paste textarea{min-height:130px;resize:vertical;line-height:1.45;font-family:monospace;font-size:10px}
+.rs-paste button{margin-top:8px}
+.rs-status{padding:0 18px 14px;font-size:10px;line-height:1.5;color:#60748b;overflow-wrap:anywhere}
+.rs-status.good{color:#13834b}
+.rs-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:0 18px 14px}
+.rs-metric{padding:10px;border:1px solid var(--border);border-radius:10px;background:#fbfdff}
+.rs-metric b{display:block;font-size:9px;color:#71849b;margin-bottom:4px}
+.rs-metric span{font-size:14px;font-weight:bold;color:#23496e}
+.rs-table-wrap{max-height:240px;overflow:auto;margin:0 18px 16px;border:1px solid var(--border);border-radius:10px}
+.rs-table{width:100%;border-collapse:collapse;font-size:9px}
+.rs-table th,.rs-table td{padding:7px 6px;text-align:right;border-bottom:1px solid #edf1f6;white-space:nowrap}
+.rs-table th{position:sticky;top:0;background:#edf4fb;color:#34506d}
+.rs-table th:first-child,.rs-table td:first-child{text-align:left}
+@media(max-width:760px){.rs-controls{grid-template-columns:repeat(2,minmax(0,1fr))}.rs-chart-grid{grid-template-columns:1fr}.rs-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:430px){.rs-controls{grid-template-columns:1fr}.rs-head{align-items:flex-start;flex-direction:column}.rs-actions button{min-width:100%}}
+
 </style>
 </head>
 
@@ -398,23 +549,23 @@ header{padding:0 12px}
 <div><strong>TEMPERATURA DE BRILHO (BT)</strong><small>GOES-19 ABI C13 · referência Color Enhanced · 10,3 µm</small></div><div class="dot"></div>
 </div>
 
-<div id="btColorLegend" class="bt-legend" aria-label="Tabela de cores da temperatura de brilho">
-<h4>LEGENDA BT · PALETA CLOUDGOD / COLOR ENHANCED</h4>
+<div id="btColorLegend" class="bt-legend" aria-label="Tabela de cores de referência da temperatura de brilho">
+<h4>LEGENDA BT · COLOR ENHANCED</h4>
 <table class="bt-table">
 <tbody>
-<tr><td><span class="bt-swatch" style="background:linear-gradient(90deg,#35b86b,#f39a25,#df3434,#c12b9a,#f5f5f5,#20a9d6,#2457a6,#777777,#282828)"></span></td><td>Acima de −10 °C</td><td>Transição contínua por toda a paleta</td></tr>
-<tr><td><span class="bt-swatch" style="background:#35b86b"></span></td><td>−10 a −20 °C</td><td>Topo de nuvem frio</td></tr>
-<tr><td><span class="bt-swatch" style="background:#f39a25"></span></td><td>−20 a −30 °C</td><td>Nuvens frias</td></tr>
-<tr><td><span class="bt-swatch" style="background:#df3434"></span></td><td>−30 a −40 °C</td><td>Resfriamento acentuado</td></tr>
-<tr><td><span class="bt-swatch" style="background:#c12b9a"></span></td><td>−40 a −50 °C</td><td>Convecção profunda</td></tr>
-<tr><td><span class="bt-swatch" style="background:#f5f5f5"></span></td><td>−50 a −60 °C</td><td>Topos muito frios</td></tr>
-<tr><td><span class="bt-swatch" style="background:#20a9d6"></span></td><td>−60 a −70 °C</td><td>Convecção intensa</td></tr>
-<tr><td><span class="bt-swatch" style="background:#2457a6"></span></td><td>−70 a −80 °C</td><td>Topos extremamente frios</td></tr>
-<tr><td><span class="bt-swatch" style="background:#777777"></span></td><td>−80 a −90 °C</td><td>Valores muito baixos</td></tr>
-<tr><td><span class="bt-swatch" style="background:#282828"></span></td><td>Abaixo de −90 °C</td><td>Extremo da escala</td></tr>
+<tr><td><span class="bt-swatch" style="background:#282828"></span></td><td>Acima de −10 °C</td><td>Superfície / nuvens quentes</td></tr>
+<tr><td><span class="bt-swatch" style="background:#777777"></span></td><td>−10 a −20 °C</td><td>Topo de nuvem frio</td></tr>
+<tr><td><span class="bt-swatch" style="background:#2457a6"></span></td><td>−20 a −30 °C</td><td>Nuvens frias</td></tr>
+<tr><td><span class="bt-swatch" style="background:#20a9d6"></span></td><td>−30 a −40 °C</td><td>Resfriamento acentuado</td></tr>
+<tr><td><span class="bt-swatch" style="background:#35b86b"></span></td><td>−40 a −50 °C</td><td>Convecção profunda</td></tr>
+<tr><td><span class="bt-swatch" style="background:#d5df35"></span></td><td>−50 a −60 °C</td><td>Topos muito frios</td></tr>
+<tr><td><span class="bt-swatch" style="background:#f39a25"></span></td><td>−60 a −70 °C</td><td>Convecção intensa</td></tr>
+<tr><td><span class="bt-swatch" style="background:#df3434"></span></td><td>−70 a −80 °C</td><td>Topos extremamente frios</td></tr>
+<tr><td><span class="bt-swatch" style="background:#c12b9a"></span></td><td>−80 a −90 °C</td><td>Valores muito baixos</td></tr>
+<tr><td><span class="bt-swatch" style="background:#f5f5f5"></span></td><td>Abaixo de −90 °C</td><td>Extremo da escala</td></tr>
 </tbody>
 </table>
-<div class="bt-note">Paleta aplicada aos pixels do raster com BT calibrada do GOES-19 ABI Band 13. As temperaturas são convertidas de Kelvin para °C antes da colorização. Acima de −10 °C, a paleta completa é interpolada continuamente.</div>
+<div class="bt-note">Escala ilustrativa de referência para o realce Color Enhanced. Os intervalos e cores precisam corresponder à tabela de cores aplicada ao raster BT; a legenda, sozinha, não calibra nem altera os pixels.</div>
 </div>
 
 <div class="info" style="margin:10px 0 12px">Exibindo imagens de todos os radares disponíveis. O ícone 📡 indica a localização de cada estação de radar.</div>
@@ -427,6 +578,15 @@ header{padding:0 12px}
 </section>
 
 
+
+<section class="panel export-panel">
+<h3>EXPORTAÇÃO METEOROLÓGICA</h3>
+<div class="export-help"><b>FOTO DE ULTRA RESOLUÇÃO 1:1</b><br>Ative a ferramenta e toque no centro da região desejada do mapa. A captura será exportada em PNG quadrado de 3072 × 3072 pixels, com as camadas visíveis. A ampliação não inventa detalhes que não existam no raster original.</div>
+<button class="primary" id="photoModeButton" onclick="toggleUltraPhotoMode()">FOTO DE ULTRA RESOLUÇÃO</button>
+<div class="export-help" style="margin-top:12px"><b>GIF · AMÉRICA DO SUL</b><br>Enquadra a América do Sul e anima os quadros temporais reais de reflectividade carregados da REDEMET, em loop contínuo.</div>
+<button class="secondary" id="gifExportButton" onclick="exportSouthAmericaGif()">GERAR GIF DA AMÉRICA DO SUL</button>
+<div id="exportStatus" class="export-state">Aguardando seleção ou exportação.</div>
+</section>
 
 <section class="panel">
 <h3>MEDIDOR DE DISTÂNCIA</h3>
@@ -459,8 +619,17 @@ Toque em qualquer local do mapa para medir a distância em linha reta a partir d
 
 <section class="panel">
 <h3>RAIOS E RELÂMPAGOS</h3>
-<div class="info">Exibe detecções reais de descargas elétricas no mapa. O símbolo ⚡ identifica cada descarga; a cor representa a energia relativa detectada.</div>
+<div class="info">Exibe as descargas elétricas detectadas no mapa como pontos coloridos. A cor representa a intensidade energética relativa informada pelo GOES-19 GLM; os pontos permanecem visíveis enquanto o loop anima cada descarga.</div>
 <button class="primary" id="lightningToggle" style="width:100%;margin-top:10px" onclick="toggleLightning()">ATIVAR RAIOS E RELÂMPAGOS</button>
+<button class="secondary" id="lightningLoopToggle" style="width:100%;margin-top:8px" onclick="toggleLightningLoop()" disabled>INICIAR LOOP DOS RAIOS</button>
+<label for="lightningSpeed">VELOCIDADE DO LOOP</label>
+<select id="lightningSpeed" onchange="updateLightningSpeed(this.value)" style="margin-top:5px;margin-bottom:10px">
+<option value="1200">Lento · 0,8 raio/s</option>
+<option value="700">Normal · 1,4 raio/s</option>
+<option value="350">Rápido · 2,9 raios/s</option>
+<option value="180">Muito rápido · 5,6 raios/s</option>
+<option value="100" selected>ULTRA RÁPIDO · 10 raios/s</option>
+</select>
 <label>OPACIDADE DOS MARCADORES</label>
 <input type="range" id="lightningOpacity" min="20" max="100" value="100">
 <div class="lightning-legend">
@@ -555,6 +724,141 @@ Toque em qualquer local do mapa para medir a distância em linha reta a partir d
 </aside>
 </div>
 
+<section class="mn-panel" id="modelosNumericos">
+ <div class="mn-head">
+  <div>
+   <h2>MODELOS NUMÉRICOS · PREVISÃO DE CHUVA</h2>
+   <small>Produtos oficiais do CPTEC/INPE · WRF 7 km e MONAN</small>
+  </div>
+  <span class="status" style="font-size:9px">● FONTE OFICIAL</span>
+ </div>
+ <div class="mn-controls">
+  <div>
+   <label for="mnModel">MODELO</label>
+   <select id="mnModel" onchange="changeMNModel()">
+    <option value="wrf">WRF · 7 km (padrão)</option>
+    <option value="monan">MONAN</option>
+   </select>
+  </div>
+  <div>
+   <label for="mnVariable">PRODUTO</label>
+   <select id="mnVariable" onchange="changeMNVariable()">
+    <option value="aprec">Precipitação acumulada</option>
+   </select>
+  </div>
+  <div>
+   <label for="mnRegion">DOMÍNIO</label>
+   <select id="mnRegion" onchange="changeMNRegion()">
+    <option value="ams">América do Sul</option>
+   </select>
+  </div>
+ </div>
+ <div class="mn-frame-wrap">
+  <iframe id="mnFrame" title="Previsão numérica oficial do CPTEC/INPE" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" src="https://previsaonumerica.cptec.inpe.br/wrf/aprec/ams/"></iframe>
+ </div>
+ <div class="mn-fallback">
+  <button class="primary" type="button" onclick="openMNOfficial()">ABRIR PRODUTO OFICIAL EM NOVA ABA</button>
+  <small id="mnStatus">WRF 7 km · Precipitação acumulada. Se o portal não aparecer incorporado, use o botão para abrir diretamente.</small>
+ </div>
+ <div class="mn-grid">
+  <div class="mn-item"><b>PRECIPITAÇÃO ACUMULADA</b><span>Produto selecionado · mapas de previsão em milímetros.</span></div>
+  <div class="mn-item"><b>TEMPERATURA E PONTO DE ORVALHO</b><span>Próxima integração: campos meteorológicos do GRIB2.</span></div>
+  <div class="mn-item"><b>UMIDADE E CONVERGÊNCIA</b><span>Próxima integração: níveis de pressão e convergência de umidade.</span></div>
+  <div class="mn-item"><b>CAPE, CIN E PWAT</b><span>Próxima integração: índices convectivos e água precipitável.</span></div>
+  <div class="mn-item"><b>MOVIMENTO VERTICAL (OMEGA)</b><span>Próxima integração: levantamento em 850, 700 e 500 hPa.</span></div>
+  <div class="mn-item"><b>CISALHAMENTO E SRH</b><span>Próxima integração: perfis de vento e helicidade relativa à tempestade.</span></div>
+  <div class="mn-item"><b>VENTO E PRESSÃO</b><span>Próxima integração: vento em superfície e altitude, pressão ao nível do mar.</span></div>
+  <div class="mn-item"><b>FRAMES DA PREVISÃO</b><span>Controles de animação disponíveis no visualizador oficial do modelo.</span></div>
+ </div>
+ <div class="mn-note"><b>Transparência dos dados:</b> nesta versão, o mapa incorporado usa o produto oficial de precipitação acumulada do CPTEC. As demais variáveis aparecem como próximas integrações; não são simuladas nem exibidas como se já estivessem disponíveis. Para ativá-las no CLOUDGOD será necessário processar os campos GRIB2 do WRF/MONAN.</div>
+ <div class="mn-source">Fontes: <a href="https://previsaonumerica.cptec.inpe.br/wrf/aprec/ams/" target="_blank" rel="noopener">WRF · CPTEC/INPE</a> · <a href="https://previsaonumerica.cptec.inpe.br/monan/aprec/ams/" target="_blank" rel="noopener">MONAN · CPTEC/INPE</a> · <a href="https://dataserver.cptec.inpe.br/dataserver_modelos/wrf/ams_07km/" target="_blank" rel="noopener">Arquivo de dados WRF 7 km</a>.</div>
+</section>
+
+
+<section class="rs-panel" id="radiossondagem">
+ <div class="rs-head">
+  <div>
+   <h2>RADIOSSONDAGEM · SKEW-T / LOG-P</h2>
+   <small>Perfil vertical observado · temperatura, ponto de orvalho e vento</small>
+  </div>
+  <span class="status" style="font-size:9px">● ANÁLISE VERTICAL</span>
+ </div>
+ <div class="rs-controls">
+  <div>
+   <label for="rsStation">ESTAÇÃO (WMO)</label>
+   <select id="rsStation">
+    <option value="83779" selected>São Paulo / Marte · 83779</option>
+    <option value="83746">Rio de Janeiro / Galeão · 83746</option>
+    <option value="83378">Brasília · 83378</option>
+    <option value="82332">Manaus · 82332</option>
+    <option value="82193">Belém · 82193</option>
+    <option value="82900">Recife · 82900</option>
+    <option value="83229">Salvador · 83229</option>
+    <option value="83612">Campo Grande · 83612</option>
+    <option value="83840">Curitiba · 83840</option>
+    <option value="83971">Porto Alegre · 83971</option>
+   </select>
+  </div>
+  <div>
+   <label for="rsDate">DATA (OPCIONAL)</label>
+   <input type="date" id="rsDate">
+  </div>
+  <div>
+   <label for="rsHour">HORÁRIO UTC</label>
+   <select id="rsHour">
+    <option value="all" selected>Mais recente (qualquer horário)</option>
+    <option value="00">00Z</option>
+    <option value="12">12Z</option>
+   </select>
+  </div>
+  <div>
+   <label for="rsUnits">UNIDADE DO VENTO</label>
+   <select id="rsUnits">
+    <option value="kt" selected> nós (kt)</option>
+    <option value="ms"> m/s</option>
+   </select>
+  </div>
+ </div>
+ <div class="rs-actions">
+  <button class="primary" id="rsFetchBtn" type="button" onclick="fetchLatestRadiosonde()">BUSCAR SONDAGEM AUTOMATICAMENTE</button>
+  <button class="secondary" type="button" onclick="downloadRadiosondeCSV()">BAIXAR CSV</button>
+  <button class="secondary" type="button" onclick="clearRadiosonde()">LIMPAR GRÁFICOS</button>
+ </div>
+ <div class="rs-source-note">
+  <b>Carregamento automático:</b> o CLOUDGOD consulta o arquivo de radiossondagens da NOAA/IGRA, seleciona a última observação disponível da estação e converte os níveis para o Skew-T e o hodógrafo. Você não precisa copiar nem colar dados. A disponibilidade e a atualização dependem dos envios recebidos pela NOAA.
+ </div>
+ <div class="rs-chart-grid">
+  <div class="rs-chart-card">
+   <div class="rs-chart-title">SKEW-T / LOG-P · T (vermelho) · Td (verde)</div>
+   <canvas id="rsSkewCanvas" width="900" height="760" aria-label="Diagrama Skew-T"></canvas>
+   <div class="rs-chart-empty" id="rsSkewEmpty">Aguardando dados reais da radiossondagem. Cole um arquivo Text: List para gerar o diagrama.</div>
+  </div>
+  <div class="rs-chart-card">
+   <div class="rs-chart-title">HODÓGRAFO · PERFIL DO VENTO</div>
+   <canvas id="rsHodoCanvas" width="520" height="520" aria-label="Hodógrafo"></canvas>
+   <div class="rs-chart-empty" id="rsHodoEmpty">O hodógrafo será desenhado quando houver direção e velocidade do vento nos níveis da sondagem.</div>
+  </div>
+ </div>
+ <div class="rs-metrics" id="rsMetrics">
+  <div class="rs-metric"><b>NÍVEIS LIDOS</b><span>—</span></div>
+  <div class="rs-metric"><b>PRESSÃO MÍNIMA</b><span>—</span></div>
+  <div class="rs-metric"><b>TEMPERATURA SUPERFÍCIE</b><span>—</span></div>
+  <div class="rs-metric"><b>TOPO DO PERFIL</b><span>—</span></div>
+ </div>
+ <div class="rs-status" id="rsStatus">Fonte automática: NOAA/NCEI · Integrated Global Radiosonde Archive (IGRA 2.2). Clique em “Buscar sondagem automaticamente”.</div>
+ <div class="rs-table-wrap" id="rsTableWrap" hidden>
+  <table class="rs-table">
+   <thead><tr><th>Pressão (hPa)</th><th>Altitude (m)</th><th>Temp. (°C)</th><th>Ponto orvalho (°C)</th><th>UR (%)</th><th>Vento (°)</th><th>Velocidade (kt)</th></tr></thead>
+   <tbody id="rsTableBody"></tbody>
+  </table>
+ </div>
+ <div class="mn-source">
+  Fontes: <a href="https://weather.uwyo.edu/upperair/sounding.shtml" target="_blank" rel="noopener">University of Wyoming · Upper Air</a> ·
+  <a href="https://www.ncei.noaa.gov/products/weather-balloon/integrated-global-radiosonde-archive" target="_blank" rel="noopener">NOAA · IGRA</a> ·
+  <a href="https://wis2bra.inmet.gov.br/oapi/collections/discovery-metadata/items/urn%3Awmo%3Amd%3Abr-inmet%3Aupper-air?f=html" target="_blank" rel="noopener">INMET · dados TEMP em BUFR</a>.
+ </div>
+</section>
+
 <section class="loop">
 <div class="loop-head">
 <h3>ANIMAÇÃO TEMPORAL · PRODUTO ATIVO</h3>
@@ -577,8 +881,19 @@ Toque em qualquer local do mapa para medir a distância em linha reta a partir d
 <select id="speed">
 <option value="1500">Lenta</option>
 <option value="800" selected>Normal</option>
-<option value="400">Rápida</option>
-<option value="200">Muito rápida</option>
+<option value="250">Rápida</option>
+<option value="50">Muito rápida</option>
+</select>
+<label for="loopFrameCount">QUANTIDADE DE FRAMES NO LOOP</label>
+<select id="loopFrameCount">
+<option value="all" selected>Todos os frames disponíveis</option>
+<option value="5">5 frames</option>
+<option value="10">10 frames</option>
+<option value="15">15 frames</option>
+<option value="20">20 frames</option>
+<option value="30">30 frames</option>
+<option value="45">45 frames</option>
+<option value="60">60 frames</option>
 </select>
 <label><input type="checkbox" id="autoRefresh"> Atualização automática</label>
 </div>
@@ -633,6 +948,8 @@ Toque em qualquer local do mapa para medir a distância em linha reta a partir d
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/esri-leaflet@3.0.15/dist/esri-leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
 
 <script>
 // ============================================
@@ -652,23 +969,34 @@ let currentProduct="maxcappi";
 let frames=[];
 let currentFrame=0;
 let loopTimer=null;
+let loopRunToken=0;
 let radarLayers=[];
 let refreshing=false;
 let frameRenderToken=0;
+let lastRenderedFrame=-1;
 const radarStationGroup=L.layerGroup();
 let radarStationsLoaded=false;
 
 // Descargas elétricas: o endpoint deve ser servido por uma função backend.
 // O backend consulta/decodifica os arquivos oficiais GOES-19 GLM-L2-LCFA
 // e devolve GeoJSON: {"type":"FeatureCollection","features":[...]}
-const LIGHTNING_API="/api/lightning";
+const LIGHTNING_API="https://cloudgod-gif-foto.onrender.com/api/lightning";
 let lightningEnabled=false;
 let lightningTimer=null;
 let lightningGroup=L.layerGroup();
 let lightningFeatures=[];
 let lightningLayers=[];
+let lightningStaticLayers=[];
 let lightningRequest=null;
 let lightningLastSignature="";
+let lightningAnimationTimer=null;
+let lightningFlashTimeout=null;
+let lightningAnimationIndex=0;
+let lightningLoopRunning=false;
+let lightningActiveMarker=null;
+let LIGHTNING_LOOP_INTERVAL=1000; // Intervalo configurável entre as descargas reproduzidas.
+let LIGHTNING_FLASH_DURATION=850; // Duração do brilho, ajustada conforme a velocidade.
+let lightningAnimationLimits={low:0,medium:0,high:0};
 const lightningCanvas=L.canvas({padding:0.5});
 
 // Sistema de Tempo Severo Convectivo (STSC) da REDEMET/DECEA.
@@ -730,7 +1058,7 @@ function refreshGOES13(){
  const nextUrl=btImageUrl();
  if(!goes13Layer){
   goes13Layer=L.imageOverlay(nextUrl,SOUTH_AMERICA_BOUNDS,{
-   opacity:btOpacity(),interactive:false,
+   opacity:btOpacity(),interactive:false,crossOrigin:"anonymous",
    // A imagem é carregada pelo próprio elemento <img> do Leaflet.
    // Isso evita a restrição CORS de fetch()+Blob em hospedagens estáticas.
    crossOrigin:false
@@ -1253,6 +1581,12 @@ function haversine(lat1,lon1,lat2,lon2){
 // ============================================
 
 map.on("click",function(event){
+ if(ultraPhotoMode){
+  ultraPhotoMode=false;document.body.classList.remove("photo-pick");
+  const photoButton=document.getElementById("photoModeButton");if(photoButton)photoButton.textContent="FOTO DE ULTRA RESOLUÇÃO";
+  captureUltraPhoto(event.latlng).catch(error=>setExportStatus("Falha ao gerar PNG: "+error.message,false));
+  return;
+ }
  if(areaMode){
   const point={lat:event.latlng.lat,lng:event.latlng.lng};
   if(!areaStart){
@@ -1449,46 +1783,121 @@ function buildURL(){
  return API[currentProduct]+"?"+params.toString();
 }
 
-// Normaliza imagens de radar e recolhe coordenadas das estações mesmo
-// quando a API não disponibiliza uma imagem naquele horário.
+// Imagens REDEMET passam pelo backend do mesmo domínio. Isso permite
+// que o Leaflet e o html2canvas leiam o raster real durante PNG/GIF.
+const RADAR_IMAGE_PROXY="https://cloudgod-gif-foto.onrender.com/api/radar-image";
+function radarImageProxyUrl(originalUrl){
+ const source=String(originalUrl||"").trim();
+ if(!source)return "";
+ let absolute;
+ try{
+  absolute=new URL(source,"https://api-redemet.decea.mil.br").href;
+  const proxy=new URL(RADAR_IMAGE_PROXY);
+  proxy.searchParams.set("url",absolute);
+  return proxy.href;
+ }catch(error){
+  console.error("URL de raster REDEMET inválida:",error);
+  return "";
+ }
+}
+
+// Normaliza respostas da REDEMET sem presumir que "radar" seja sempre array.
+// A API pode entregar os grupos temporais como arrays ou objetos indexados.
 function parseRadarResponse(json){
- const data=json?.data;
- const radar=data?.radar;
- if(!Array.isArray(radar))return {frames:[],stations:[]};
- // A REDEMET organiza a resposta em grupos temporais. Cada grupo contém
- // várias estações; manter o grupo inteiro evita uma estação por quadro.
- const groups=Array.isArray(radar[0])?radar:[radar];
+ const data=json?.data||{};
+ const radar=data.radar??data.RADAR??data.imagens??data;
+ if(!radar)return {frames:[],stations:[]};
+
+ const isImageNode=value=>value&&typeof value==="object"&&
+  ["path","url","imagem","image","arquivo","imagem_url","image_url","arquivo_url","url_imagem"].some(k=>value[k]);
+
+ let groups;
+ if(Array.isArray(radar)){
+  groups=Array.isArray(radar[0])?radar:[radar];
+ }else if(isImageNode(radar)){
+  groups=[[radar]];
+ }else if(typeof radar==="object"){
+  const values=Object.values(radar);
+  groups=values.length&&values.every(v=>Array.isArray(v)||isImageNode(v))?[values]:values;
+ }else{
+  return {frames:[],stations:[]};
+ }
+
  const stations=[];
  const parsedFrames=[];
+ const sharedBox=data.lat_lon||data.latLon||data.bounds||{};
+ const numberFrom=(obj,keys)=>{
+  for(const key of keys){
+   const value=Number(obj?.[key]);
+   if(Number.isFinite(value))return value;
+  }
+  return NaN;
+ };
+
  groups.forEach((group,index)=>{
   const nodes=[];
   function flatten(value){
    if(Array.isArray(value)){value.forEach(flatten);return;}
    if(value&&typeof value==="object"){
-    if(value.path||value.url||value.imagem||value.image||value.arquivo)nodes.push(value);
+    if(isImageNode(value))nodes.push(value);
     else Object.values(value).forEach(flatten);
    }
   }
   flatten(group);
+
   const images=[];
   nodes.forEach(node=>{
-   const centerLat=Number(node.lat_center??node.latitude_center??node.latCenter);
-   const centerLon=Number(node.lon_center??node.longitude_center??node.lonCenter);
+   const centerLat=numberFrom(node,["lat_center","latitude_center","latCenter","latitude","lat"]);
+   const centerLon=numberFrom(node,["lon_center","longitude_center","lonCenter","longitude","lon"]);
    if(Number.isFinite(centerLat)&&Number.isFinite(centerLon)){
-    stations.push({id:String(node.id??node.localidade??node.nome??(index+1)),name:node.nome||node.localidade||"Radar meteorológico",lat:centerLat,lon:centerLon});
+    stations.push({
+     id:String(node.id??node.codigo??node.localidade??node.nome??(index+1)),
+     name:node.nome||node.localidade||node.estacao||"Radar meteorológico",
+     lat:centerLat,lon:centerLon
+    });
    }
-   const path=node.path||node.url||node.imagem||node.image||node.arquivo;
-   const south=Number(node.lat_min??node.latitude_min??node.latMin);
-   const north=Number(node.lat_max??node.latitude_max??node.latMax);
-   const west=Number(node.lon_min??node.longitude_min??node.lonMin);
-   const east=Number(node.lon_max??node.longitude_max??node.lonMax);
-   if(path&&[south,north,west,east].every(Number.isFinite)){
-    images.push({url:/^https?:\/\//i.test(path)?path:new URL(path,"https://api-redemet.decea.mil.br").href,bounds:[[south,west],[north,east]]});
+
+   const rawPath=node.path||node.url||node.imagem||node.image||node.arquivo||
+    node.imagem_url||node.image_url||node.arquivo_url||node.url_imagem;
+   const south=numberFrom(node,["lat_min","latitude_min","latMin","south"]) ;
+   const north=numberFrom(node,["lat_max","latitude_max","latMax","north"]);
+   const west=numberFrom(node,["lon_min","longitude_min","lonMin","west"]);
+   const east=numberFrom(node,["lon_max","longitude_max","lonMax","east"]);
+   const boxSouth=numberFrom(sharedBox,["lat_min","latitude_min","south"]);
+   const boxNorth=numberFrom(sharedBox,["lat_max","latitude_max","north"]);
+   const boxWest=numberFrom(sharedBox,["lon_min","longitude_min","west"]);
+   const boxEast=numberFrom(sharedBox,["lon_max","longitude_max","east"]);
+   const boundsValues=[
+    Number.isFinite(south)?south:boxSouth,
+    Number.isFinite(north)?north:boxNorth,
+    Number.isFinite(west)?west:boxWest,
+    Number.isFinite(east)?east:boxEast
+   ];
+
+   if(rawPath&&boundsValues.every(Number.isFinite)){
+    let absoluteImageUrl="";
+    try{
+     absoluteImageUrl=new URL(String(rawPath),"https://api-redemet.decea.mil.br").href;
+    }catch(error){
+     console.warn("URL de imagem REDEMET inválida:",rawPath,error);
+    }
+    if(absoluteImageUrl){
+     images.push({
+      url:absoluteImageUrl,
+      bounds:[[boundsValues[0],boundsValues[2]],[boundsValues[1],boundsValues[3]]]
+     });
+    }
    }
   });
-  const time=data?.anima?.[index]||nodes.find(n=>n.data)?.data||("Quadro "+(index+1));
+
+  const time=data?.anima?.[index]||data?.horarios?.[index]||
+   nodes.find(n=>n.data||n.datahora||n.horario)?.data||
+   nodes.find(n=>n.datahora)?.datahora||
+   nodes.find(n=>n.horario)?.horario||
+   ("Quadro "+(index+1));
   if(images.length)parsedFrames.push({time,images});
  });
+
  return {frames:parsedFrames,stations};
 }
 
@@ -1531,6 +1940,13 @@ function clearRadarLayers(){
  radarLayers=[];
 }
 
+// Usa o proxy do mesmo domínio Render para carregar o raster REDEMET.
+function radarExportSafeUrl(sourceUrl){
+ // O proxy Render devolve os bytes da REDEMET com Access-Control-Allow-Origin,
+ // permitindo ao Leaflet e ao html2canvas lerem os mesmos pixels do raster.
+ return radarImageProxyUrl(sourceUrl);
+}
+
 async function showFrame(index){
  if(!frames.length) return;
  const renderToken=++frameRenderToken;
@@ -1540,14 +1956,19 @@ async function showFrame(index){
  const opacity=Number(document.getElementById("opacity").value)/100;
 
  // Mantém o quadro anterior visível enquanto as novas imagens carregam.
+ // Não força CORS nas imagens REDEMET: alguns servidores entregam o raster
+ // sem Access-Control-Allow-Origin. Com crossorigin=anonymous o navegador
+ // bloqueia a própria imagem, deixando os retângulos e ícones de imagem quebrada.
  const nextLayers=frame.images.map(image=>L.imageOverlay(
-  image.url,image.bounds,
-  {opacity,interactive:false,className:"leaflet-radar-raster"}
- ));
- nextLayers.forEach(layer=>layer.addTo(radarGroup));
+  radarExportSafeUrl(image.url),image.bounds,
+  {opacity:0,interactive:false,crossOrigin:false,className:"leaflet-radar-raster"}
+  ));
 
- const loadResults=await Promise.all(nextLayers.map(layer=>new Promise(resolve=>{
+ // Registrar os eventos ANTES de adicionar as imagens evita perder o evento
+ // load quando o navegador já tem o arquivo em cache.
+ const loadPromises=nextLayers.map(layer=>new Promise(resolve=>{
   let finished=false;
+  let timer;
   const finish=ok=>{
    if(finished)return;
    finished=true;
@@ -1558,10 +1979,45 @@ async function showFrame(index){
   };
   const onLoad=()=>finish(true);
   const onError=()=>finish(false);
-  const timer=setTimeout(()=>finish(false),15000);
   layer.once("load",onLoad);
   layer.once("error",onError);
- })));
+  timer=setTimeout(()=>{
+   const element=layer.getElement();
+   finish(Boolean(element&&element.complete&&element.naturalWidth>0));
+  },15000);
+ }));
+ nextLayers.forEach(layer=>layer.addTo(radarGroup));
+ let loadResults=await Promise.all(loadPromises);
+
+ // Se o proxy estiver indisponível, tenta a URL oficial diretamente.
+ // A imagem continua visível no mapa; exportação pode exigir CORS do servidor.
+ const failedIndexes=loadResults.map((ok,i)=>ok?-1:i).filter(i=>i>=0);
+ if(failedIndexes.length){
+  const fallbackPromises=failedIndexes.map(i=>new Promise(resolve=>{
+   const layer=nextLayers[i];
+   let finished=false;
+   let timer;
+   const finish=ok=>{
+    if(finished)return;
+    finished=true;
+    clearTimeout(timer);
+    layer.off("load",onLoad);
+    layer.off("error",onError);
+    resolve(ok);
+   };
+   const onLoad=()=>finish(true);
+   const onError=()=>finish(false);
+   layer.once("load",onLoad);
+   layer.once("error",onError);
+   timer=setTimeout(()=>{
+    const element=layer.getElement();
+    finish(Boolean(element&&element.complete&&element.naturalWidth>0));
+   },12000);
+   layer.setUrl(frames[currentFrame].images[i].url);
+  }));
+  const fallbackResults=await Promise.all(fallbackPromises);
+  fallbackResults.forEach((ok,j)=>{loadResults[failedIndexes[j]]=ok;});
+ }
 
  // Descarta carregamentos antigos quando o usuário avança rapidamente.
  if(renderToken!==frameRenderToken){
@@ -1569,13 +2025,29 @@ async function showFrame(index){
   return;
  }
 
- if(loadResults.every(Boolean)){
+ const successfulLayers=nextLayers.filter((layer,i)=>loadResults[i]);
+ const failedCount=nextLayers.length-successfulLayers.length;
+ if(successfulLayers.length){
+  // Exibe todos os radares que carregaram, mesmo se uma estação falhar.
+  successfulLayers.forEach(layer=>layer.setOpacity(opacity));
+  radarLayers.forEach(layer=>layer.setOpacity(0));
+  await new Promise(resolve=>setTimeout(resolve,60));
+  if(renderToken!==frameRenderToken){
+   nextLayers.forEach(layer=>radarGroup.removeLayer(layer));
+   return;
+  }
   radarLayers.forEach(layer=>radarGroup.removeLayer(layer));
-  radarLayers=nextLayers;
+  nextLayers.filter((layer,i)=>!loadResults[i]).forEach(layer=>radarGroup.removeLayer(layer));
+  radarLayers=successfulLayers;
+  lastRenderedFrame=currentFrame;
+  if(failedCount){
+   document.getElementById("message").textContent=
+    successfulLayers.length+" imagem(ns) de radar carregadas; "+failedCount+" falharam nesta atualização.";
+  }
  }else{
   nextLayers.forEach(layer=>radarGroup.removeLayer(layer));
   document.getElementById("message").textContent=
-   "Falha ao carregar uma ou mais imagens. O quadro anterior foi mantido.";
+   "As imagens de radar não carregaram. O quadro anterior foi mantido.";
  }
 
  document.getElementById("timeline").max=Math.max(0,frames.length-1);
@@ -1632,13 +2104,35 @@ async function refreshRadar(){
 }
 
 function nextFrame(){
- if(frames.length) showFrame(currentFrame+1);
+ if(frames.length) return showFrame(currentFrame+1);
 }
 function previousFrame(){
- if(frames.length) showFrame(currentFrame-1);
+ if(frames.length) return showFrame(currentFrame-1);
 }
 function pauseLoop(){
- if(loopTimer){clearInterval(loopTimer);loopTimer=null;}
+ // Invalida qualquer ciclo que esteja aguardando o carregamento de um quadro.
+ loopRunToken++;
+ if(loopTimer){clearTimeout(loopTimer);loopTimer=null;}
+}
+function getLoopFrameIndexes(){
+ const selector=document.getElementById("loopFrameCount");
+ const requested=selector?.value||"all";
+ const count=requested==="all"?frames.length:Math.min(frames.length,Math.max(1,Number(requested)||frames.length));
+ // Usa os quadros mais recentes quando o usuário escolhe uma quantidade menor.
+ const first=Math.max(0,frames.length-count);
+ return Array.from({length:count},(_,i)=>first+i);
+}
+async function runRadarLoop(token){
+ if(token!==loopRunToken||!frames.length)return;
+ const speed=Math.max(20,Number(document.getElementById("speed").value)||800);
+ const indexes=getLoopFrameIndexes();
+ if(!indexes.length)return;
+ const currentPosition=indexes.indexOf(currentFrame);
+ const nextIndex=indexes[(currentPosition+1+indexes.length)%indexes.length];
+ // Aguarda o quadro terminar de carregar para não pular imagens ainda não exibidas.
+ await showFrame(nextIndex);
+ if(token!==loopRunToken||!frames.length)return;
+ loopTimer=setTimeout(()=>runRadarLoop(token),speed);
 }
 function startLoop(){
  if(!frames.length){
@@ -1646,8 +2140,8 @@ function startLoop(){
   return;
  }
  pauseLoop();
- const speed=Number(document.getElementById("speed").value)||800;
- loopTimer=setInterval(nextFrame,speed);
+ const token=loopRunToken;
+ runRadarLoop(token);
 }
 function stopLoop(){
  pauseLoop();
@@ -1662,6 +2156,9 @@ document.getElementById("opacity").addEventListener("input",event=>{
  if(goes13Layer&&currentProduct==="brightness")goes13Layer.setOpacity(opacity);
 });
 document.getElementById("speed").addEventListener("change",()=>{
+ if(loopTimer) startLoop();
+});
+document.getElementById("loopFrameCount").addEventListener("change",()=>{
  if(loopTimer) startLoop();
 });
 document.getElementById("autoRefresh").addEventListener("change",event=>{
@@ -1704,6 +2201,89 @@ function lightningQuantile(sorted,ratio){
  return sorted[Math.min(sorted.length-1,Math.floor((sorted.length-1)*ratio))];
 }
 
+function lightningTimestamp(item){
+ const props=item.feature?.properties||{};
+ const raw=props.time??props.timestamp??props.flash_time??props.event_time??null;
+ if(raw===null||raw==="")return 0;
+ if(typeof raw==="number"){
+  // Epoch em segundos ou milissegundos.
+  return raw<1e12?raw*1000:raw;
+ }
+ const parsed=Date.parse(raw);
+ return Number.isFinite(parsed)?parsed:0;
+}
+
+function stopLightningAnimation(){
+ if(lightningAnimationTimer){
+  clearInterval(lightningAnimationTimer);
+  lightningAnimationTimer=null;
+ }
+ if(lightningFlashTimeout){
+  clearTimeout(lightningFlashTimeout);
+  lightningFlashTimeout=null;
+ }
+ if(lightningActiveMarker){
+  lightningGroup.removeLayer(lightningActiveMarker);
+  lightningActiveMarker=null;
+ }
+ lightningLayers=[];
+ lightningAnimationIndex=0;
+}
+
+function showNextLightningFlash(){
+ if(!lightningEnabled||!lightningFeatures.length)return;
+
+ if(lightningFlashTimeout){
+  clearTimeout(lightningFlashTimeout);
+  lightningFlashTimeout=null;
+ }
+ if(lightningActiveMarker){
+  lightningGroup.removeLayer(lightningActiveMarker);
+  lightningActiveMarker=null;
+ }
+
+ const item=lightningFeatures[lightningAnimationIndex];
+ lightningAnimationIndex=(lightningAnimationIndex+1)%lightningFeatures.length;
+
+ const opacity=Number(document.getElementById("lightningOpacity").value)/100;
+ const color=lightningColor(item.energy,lightningAnimationLimits);
+ const icon=L.divIcon({
+  className:"lightning-flash-icon",
+  html:`<span class="lightning-flash-dot" style="--flash-color:${color};animation-duration:${LIGHTNING_FLASH_DURATION}ms"></span>`,
+  iconSize:[24,24],
+  iconAnchor:[12,12]
+ });
+
+ lightningActiveMarker=L.marker([item.point.lat,item.point.lon],{
+  icon,
+  opacity,
+  interactive:true,
+  keyboard:false,
+  zIndexOffset:1200,
+  bubblingMouseEvents:false
+ }).addTo(lightningGroup);
+
+ const energyText=item.energy===null
+  ?"Energia não informada"
+  :`Energia GLM: ${item.energy.toExponential(2)} J`;
+ const props=item.feature?.properties||{};
+ const time=props.time??props.timestamp??"Horário não informado";
+ lightningActiveMarker.bindPopup(
+  `<b>Descarga elétrica detectada</b><br>${energyText}<br>${time}`
+ );
+ lightningLayers=[lightningActiveMarker];
+
+ // Remove o marcador ao fim do brilho.
+ lightningFlashTimeout=setTimeout(()=>{
+  if(lightningActiveMarker){
+   lightningGroup.removeLayer(lightningActiveMarker);
+   lightningActiveMarker=null;
+   lightningLayers=[];
+  }
+  lightningFlashTimeout=null;
+ },LIGHTNING_FLASH_DURATION);
+}
+
 function renderLightning(data){
  const features=Array.isArray(data)?data:(data?.features||data?.data||[]);
  const valid=[];
@@ -1720,39 +2300,104 @@ function renderLightning(data){
  if(signature===lightningLastSignature)return;
  lightningLastSignature=signature;
 
+ const resumeLoop=lightningLoopRunning;
+ stopLightningAnimation();
  const energies=valid.map(item=>item.energy).filter(value=>value!==null).sort((a,b)=>a-b);
- const limits={
+ lightningAnimationLimits={
   low:lightningQuantile(energies,.25),
   medium:lightningQuantile(energies,.50),
   high:lightningQuantile(energies,.75)
  };
- const opacity=Number(document.getElementById("lightningOpacity").value)/100;
 
- lightningGroup.clearLayers();
- lightningLayers=[];
- for(const item of valid){
-  const color=lightningColor(item.energy,limits);
+ // Pontos permanentes: todas as descargas ficam visíveis, como no mapa de referência.
+ // O loop acrescenta um brilho temporário sobre o ponto correspondente.
+ lightningStaticLayers.forEach(layer=>lightningGroup.removeLayer(layer));
+ lightningStaticLayers=[];
+ const markerOpacity=Number(document.getElementById("lightningOpacity").value)/100;
+ valid.forEach(item=>{
+  const color=lightningColor(item.energy,lightningAnimationLimits);
+  const radius=item.energy===null?5:
+   (item.energy>=lightningAnimationLimits.high?7:
+    item.energy>=lightningAnimationLimits.medium?6:
+    item.energy>=lightningAnimationLimits.low?5:4);
   const marker=L.circleMarker([item.point.lat,item.point.lon],{
-   renderer:lightningCanvas,
-   radius:5,
-   color,
-   weight:1,
-   opacity,
-   fillColor:color,
-   fillOpacity:opacity,
-   bubblingMouseEvents:false
+   radius, color:"#ffffff", weight:1.1,
+   fillColor:color, fillOpacity:Math.max(.2,markerOpacity),
+   opacity:markerOpacity, className:"lightning-static-point",
+   interactive:true, bubblingMouseEvents:false
   });
   const energyText=item.energy===null?"Energia não informada":`Energia GLM: ${item.energy.toExponential(2)} J`;
   const props=item.feature?.properties||{};
-  const time=props.time??props.timestamp??"Horário não informado";
+  const time=props.time??props.timestamp??props.flash_time??"Horário não informado";
   marker.bindPopup(`<b>Descarga elétrica detectada</b><br>${energyText}<br>${time}`);
   marker.addTo(lightningGroup);
-  lightningLayers.push(marker);
- }
+  lightningStaticLayers.push(marker);
+ });
+ lightningLayers=lightningStaticLayers.slice();
+
+ // Quando a fonte informa horário, os flashes são reproduzidos do mais antigo ao mais recente.
+ valid.sort((a,b)=>lightningTimestamp(a)-lightningTimestamp(b));
  lightningFeatures=valid;
- document.getElementById("lightningStatus").textContent=valid.length
-  ?`${valid.length} descarga(s) recebida(s) do GOES-19 GLM. Cores indicam energia relativa entre as descargas do conjunto.`
-  :"Nenhuma descarga retornada no período consultado.";
+
+ if(valid.length){
+  document.getElementById("lightningLoopToggle").disabled=false;
+  document.getElementById("lightningStatus").textContent=
+   `${valid.length} descargas visíveis no mapa. Os pontos ficam parados com o loop desligado; ative o loop para animar os flashes.`;
+  if(resumeLoop)startLightningLoop();
+ }else{
+  document.getElementById("lightningLoopToggle").disabled=true;
+  document.getElementById("lightningStatus").textContent="Nenhuma descarga retornada no período consultado.";
+ }
+}
+function updateLightningSpeed(value){
+ const requested=Number(value);
+ if(!Number.isFinite(requested)||requested<80)return;
+ LIGHTNING_LOOP_INTERVAL=requested;
+ // Pulso curto para acompanhar a frequência sem deixar flashes antigos acumulados.
+ LIGHTNING_FLASH_DURATION=Math.max(65,Math.min(260,Math.round(requested*.78)));
+ if(lightningLoopRunning){
+  if(lightningAnimationTimer)clearInterval(lightningAnimationTimer);
+  if(lightningFlashTimeout){clearTimeout(lightningFlashTimeout);lightningFlashTimeout=null;}
+  lightningAnimationTimer=setInterval(showNextLightningFlash,LIGHTNING_LOOP_INTERVAL);
+ }
+ const speedText=`${(1000/LIGHTNING_LOOP_INTERVAL).toFixed(1).replace(/\.?0+$/,'')} descarga(s) por segundo`;
+ const status=document.getElementById("lightningStatus");
+ if(lightningLoopRunning){
+  status.textContent=`${lightningFeatures.length} descargas no loop. Velocidade: ${speedText}.`;
+ }
+}
+
+function startLightningLoop(){
+ if(!lightningEnabled||!lightningFeatures.length)return;
+ updateLightningSpeed(document.getElementById("lightningSpeed").value);
+ stopLightningAnimation();
+ lightningLoopRunning=true;
+ const button=document.getElementById("lightningLoopToggle");
+ button.textContent="PARAR LOOP DOS RAIOS";
+ button.classList.remove("secondary");
+ button.classList.add("danger");
+ showNextLightningFlash();
+ lightningAnimationTimer=setInterval(showNextLightningFlash,LIGHTNING_LOOP_INTERVAL);
+ document.getElementById("lightningStatus").textContent=
+  `${lightningFeatures.length} descarga(s) no loop. Velocidade: ${(1000/LIGHTNING_LOOP_INTERVAL).toFixed(2).replace(/\.?0+$/,'')} raio(s) por segundo.`;
+}
+
+function stopLightningLoop(){
+ stopLightningAnimation();
+ lightningLoopRunning=false;
+ const button=document.getElementById("lightningLoopToggle");
+ button.textContent="INICIAR LOOP DOS RAIOS";
+ button.classList.remove("danger");
+ button.classList.add("secondary");
+ if(lightningEnabled&&lightningFeatures.length){
+  document.getElementById("lightningStatus").textContent=
+   `${lightningFeatures.length} descargas paradas e visíveis no mapa. Loop pausado.`;
+ }
+}
+
+function toggleLightningLoop(){
+ if(lightningLoopRunning)stopLightningLoop();
+ else startLightningLoop();
 }
 
 async function refreshLightning(){
@@ -1792,20 +2437,27 @@ function toggleLightning(){
   lightningTimer=null;
   if(lightningRequest)lightningRequest.abort();
   lightningRequest=null;
+  stopLightningLoop();
   lightningGroup.clearLayers();
   lightningLayers=[];
+  lightningStaticLayers=[];
   lightningFeatures=[];
   lightningLastSignature="";
   map.removeLayer(lightningGroup);
   button.textContent="ATIVAR RAIOS E RELÂMPAGOS";
   button.classList.remove("danger");button.classList.add("primary");
+  document.getElementById("lightningLoopToggle").disabled=true;
   document.getElementById("lightningStatus").textContent="Camada desligada.";
  }
 }
 
 document.getElementById("lightningOpacity").addEventListener("input",event=>{
  const opacity=Number(event.target.value)/100;
- lightningLayers.forEach(layer=>layer.setStyle({opacity,fillOpacity:opacity}));
+ lightningLayers.forEach(layer=>{
+  if(layer.setOpacity)layer.setOpacity(opacity);
+  if(layer.setStyle)layer.setStyle({opacity,fillOpacity:Math.max(.2,opacity)});
+ });
+ lightningStaticLayers.forEach(layer=>layer.setStyle({opacity,fillOpacity:Math.max(.2,opacity)}));
 });
 
 // ============================================
@@ -2046,6 +2698,156 @@ map.whenReady(()=>{
 });
 window.addEventListener("resize",()=>setTimeout(ensureMapVisible,150));
 
+// ============================================
+// EXPORTAÇÃO: FOTO QUADRADA 1:1 E GIF CONTINENTAL
+// Mantém os pixels/fonte originais: a exportação em mais pixels não
+// aumenta a resolução meteorológica nativa nem cria ecos artificiais.
+// ============================================
+let ultraPhotoMode=false;
+const SOUTH_AMERICA_EXPORT_BOUNDS=[[-56.5,-82.0],[13.5,-32.0]];
+const ULTRA_PHOTO_SIZE=3072;
+function setExportStatus(message,active=true){
+ const el=document.getElementById("exportStatus");
+ if(!el)return;
+ el.textContent=message;
+ el.classList.toggle("active",!!active);
+}
+function toggleUltraPhotoMode(){
+ ultraPhotoMode=!ultraPhotoMode;
+ document.body.classList.toggle("photo-pick",ultraPhotoMode);
+ const button=document.getElementById("photoModeButton");
+ if(button)button.textContent=ultraPhotoMode?"TOQUE NA ÁREA DO MAPA…":"FOTO DE ULTRA RESOLUÇÃO";
+ setExportStatus(ultraPhotoMode?"Modo de captura ativo. Toque no centro da área que deseja fotografar.":"Modo de captura cancelado.",ultraPhotoMode);
+}
+function downloadBlob(blob,filename){
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement("a");
+ a.href=url;a.download=filename;
+ document.body.appendChild(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),30000);
+}
+async function renderMapCanvas(scale=3){
+ if(typeof html2canvas!=="function")throw new Error("Biblioteca de captura não carregou. Verifique a conexão.");
+ const node=document.getElementById("map");
+ map.invalidateSize({pan:false,animate:false});
+ return await html2canvas(node,{
+  backgroundColor:"#eaf2f8",scale,useCORS:true,allowTaint:false,
+  imageTimeout:20000,logging:false,removeContainer:true,
+  onclone:cloned=>{
+   const clonedMap=cloned.getElementById("map");
+   if(clonedMap){clonedMap.style.transform="none";clonedMap.style.filter="none";}
+  }
+ });
+}
+function canvasToBlob(canvas,type="image/png"){
+ return new Promise((resolve,reject)=>{
+  canvas.toBlob(blob=>blob?resolve(blob):reject(new Error("O navegador não conseguiu codificar a imagem.")),type);
+ });
+}
+async function captureUltraPhoto(latlng){
+ setExportStatus("Preparando captura quadrada em alta resolução…",true);
+ const originalCenter=map.getCenter(),originalZoom=map.getZoom();
+ try{
+  // Centraliza o ponto escolhido sem alterar o nível de zoom do usuário.
+  map.panTo(latlng,{animate:false});
+  map.invalidateSize({pan:false,animate:false});
+  await waitForFrame(1100);
+  if(!radarLayers.length)throw new Error("Nenhuma imagem de reflectividade está carregada. Atualize a REDEMET antes de fotografar.");
+  const source=await renderMapCanvas(3);
+  const point=map.latLngToContainerPoint(latlng);
+  const scaleX=source.width/map.getSize().x;
+  const scaleY=source.height/map.getSize().y;
+  const side=Math.min(source.width,source.height);
+  const centerX=point.x*scaleX,centerY=point.y*scaleY;
+  const sx=Math.max(0,Math.min(source.width-side,centerX-side/2));
+  const sy=Math.max(0,Math.min(source.height-side,centerY-side/2));
+  const output=document.createElement("canvas");
+  output.width=ULTRA_PHOTO_SIZE;output.height=ULTRA_PHOTO_SIZE;
+  const ctx=output.getContext("2d");
+  if(!ctx)throw new Error("Não foi possível criar a área de captura.");
+  ctx.imageSmoothingEnabled=true;
+  ctx.imageSmoothingQuality="high";
+  ctx.fillStyle="#eaf2f8";ctx.fillRect(0,0,output.width,output.height);
+  ctx.drawImage(source,sx,sy,side,side,0,0,output.width,output.height);
+  const blob=await canvasToBlob(output);
+  downloadBlob(blob,"CLOUDGOD_FOTO_ULTRA_1x1_3072.png");
+  setExportStatus("PNG 1:1 exportado · 3072 × 3072 px. A nitidez meteorológica continua limitada pelos pixels originais da REDEMET.",true);
+ }finally{
+  map.setView(originalCenter,originalZoom,{animate:false});
+  await waitForFrame(150);
+  map.invalidateSize({pan:false,animate:false});
+ }
+}
+function waitForFrame(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
+async function exportSouthAmericaGif(){
+ const button=document.getElementById("gifExportButton");
+ if(!frames.length){setExportStatus("Não há quadros temporais carregados. Atualize a reflectividade REDEMET primeiro.",false);return;}
+ if(frames.length<2){setExportStatus("A REDEMET retornou menos de dois quadros. É necessário haver pelo menos dois horários para criar um GIF animado.",false);return;}
+ if(typeof GIF!=="function"){setExportStatus("O codificador GIF não carregou. Verifique a conexão e tente novamente.",false);return;}
+ if(!["maxcappi","07km","05km"].includes(currentProduct)){
+  setExportStatus("Selecione MAXCAPPI, CAPPI 7 KM ou CAPPI 5 KM para exportar a reflectividade em GIF.",false);return;
+ }
+ const originalCenter=map.getCenter(),originalZoom=map.getZoom(),originalFrame=currentFrame;
+ const wasLoop=!!loopTimer;
+ // Os ícones 📡 continuam no mapa normal, mas não entram nos quadros exportados.
+ const stationsWereVisible=map.hasLayer(radarStationGroup);
+ let workerUrl=null;
+ pauseLoop();
+ button.disabled=true;button.textContent="GERANDO GIF…";
+ try{
+  if(stationsWereVisible)map.removeLayer(radarStationGroup);
+  map.fitBounds(SOUTH_AMERICA_EXPORT_BOUNDS,{padding:[18,18],animate:false});
+  map.invalidateSize({pan:false,animate:false});
+  await waitForFrame(1100);
+  const mapSize=map.getSize();
+  const gifWidth=Math.max(720,Math.min(1200,mapSize.x*2));
+  const gifHeight=Math.round(gifWidth*mapSize.y/mapSize.x);
+  const workerBlob=new Blob([
+   'importScripts("https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js");'
+  ],{type:"application/javascript"});
+  workerUrl=URL.createObjectURL(workerBlob);
+  const gif=new GIF({workers:2,quality:8,width:gifWidth,height:gifHeight,workerScript:workerUrl,repeat:0});
+  const total=frames.length;
+  for(let i=0;i<total;i++){
+   await showFrame(i);
+   if(lastRenderedFrame!==i)throw new Error("O quadro "+(i+1)+" não carregou integralmente; o GIF foi interrompido para não repetir uma imagem antiga.");
+   await waitForFrame(450);
+   const source=await renderMapCanvas(2);
+   const frameCanvas=document.createElement("canvas");
+   frameCanvas.width=gifWidth;frameCanvas.height=gifHeight;
+   const ctx=frameCanvas.getContext("2d");
+   if(!ctx)throw new Error("Não foi possível montar um quadro do GIF.");
+   ctx.fillStyle="#eaf2f8";ctx.fillRect(0,0,gifWidth,gifHeight);
+   ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality="high";
+   const ratio=Math.min(gifWidth/source.width,gifHeight/source.height);
+   const width=source.width*ratio,height=source.height*ratio;
+   ctx.drawImage(source,(gifWidth-width)/2,(gifHeight-height)/2,width,height);
+   gif.addFrame(frameCanvas,{delay:650,copy:true});
+   setExportStatus("Montando GIF de reflectividade da América do Sul: quadro "+(i+1)+" de "+total+"…",true);
+  }
+  const blob=await new Promise((resolve,reject)=>{
+   gif.on("finished",resolve);
+   gif.on("abort",()=>reject(new Error("Codificação cancelada.")));
+   gif.on("error",error=>reject(error instanceof Error?error:new Error(String(error))));
+   gif.render();
+  });
+  downloadBlob(blob,"CLOUDGOD_REFLECTIVIDADE_AMERICA_DO_SUL_LOOP.gif");
+  setExportStatus("GIF da reflectividade da América do Sul exportado · "+total+" quadros reais · loop contínuo.",true);
+ }catch(error){
+  setExportStatus("Não foi possível gerar o GIF: "+error.message+". Verifique a conexão e a permissão CORS das imagens externas.",false);
+ }finally{
+  if(workerUrl)URL.revokeObjectURL(workerUrl);
+  // Restaura os ícones das estações no mapa depois de terminar (ou falhar) o GIF.
+  if(stationsWereVisible&&!map.hasLayer(radarStationGroup))radarStationGroup.addTo(map);
+  map.setView(originalCenter,originalZoom,{animate:false});
+  await waitForFrame(250);
+  map.invalidateSize({pan:false,animate:false});
+  await showFrame(originalFrame);
+  if(wasLoop)startLoop();
+  button.disabled=false;button.textContent="GERAR GIF DA AMÉRICA DO SUL";
+ }
+}
+
 // Carrega o radar sem bloquear nem recriar o mapa-base.
 refreshRadar();
 
@@ -2062,6 +2864,288 @@ map.on("moveend",()=>{
  clearTimeout(tornadoRiskMoveTimer);
  tornadoRiskMoveTimer=setTimeout(()=>refreshTornadoRisk(),900);
 });
+
+
+// MODELOS NUMERICOS CPTEC/INPE
+const MN_URLS = {
+ wrf: "https://previsaonumerica.cptec.inpe.br/wrf/aprec/ams/",
+ monan: "https://previsaonumerica.cptec.inpe.br/monan/aprec/ams/"
+};
+function changeMNModel(){
+ const model=document.getElementById("mnModel")?.value||"wrf";
+ const frame=document.getElementById("mnFrame");
+ const status=document.getElementById("mnStatus");
+ if(frame) frame.src=MN_URLS[model]||MN_URLS.wrf;
+ if(status) status.textContent=(model==="wrf"?"WRF 7 km":"MONAN")+" · Precipitação acumulada. Fonte oficial CPTEC/INPE.";
+}
+function changeMNVariable(){
+ const status=document.getElementById("mnStatus");
+ if(status) status.textContent="Produto disponível nesta integração: precipitação acumulada. As demais variáveis serão liberadas quando os campos GRIB2 forem processados.";
+}
+function changeMNRegion(){
+ const status=document.getElementById("mnStatus");
+ if(status) status.textContent="Domínio disponível nesta integração: América do Sul.";
+}
+function openMNOfficial(){
+ const model=document.getElementById("mnModel")?.value||"wrf";
+ const url=MN_URLS[model]||MN_URLS.wrf;
+ window.open(url,"_blank","noopener");
+}
+
+// RADIOSSONDAGEM CLOUDGOD: parser Text:List, Skew-T/Log-P e hodógrafo.
+function openRadiosondeSource(){
+ const station=document.getElementById("rsStation")?.value||"83779";
+ window.open("https://weather.uwyo.edu/upperair/sounding.shtml","_blank","noopener");
+ const status=document.getElementById("rsStatus");
+ if(status)status.textContent="Consulta oficial aberta. Selecione a data, "+document.getElementById("rsHour").value+"Z e a estação WMO "+station+"; escolha Text: List e cole os dados aqui.";
+}
+function clearRadiosonde(){
+ document.getElementById("rsRawText").value="";
+ document.getElementById("rsTableWrap").hidden=true;
+ document.getElementById("rsTableBody").innerHTML="";
+ document.getElementById("rsMetrics").innerHTML='<div class="rs-metric"><b>NÍVEIS LIDOS</b><span>—</span></div><div class="rs-metric"><b>PRESSÃO MÍNIMA</b><span>—</span></div><div class="rs-metric"><b>TEMPERATURA SUPERFÍCIE</b><span>—</span></div><div class="rs-metric"><b>TOPO DO PERFIL</b><span>—</span></div>';
+ document.getElementById("rsSkewEmpty").textContent="Aguardando dados reais da radiossondagem. Cole um arquivo Text: List para gerar o diagrama.";
+ document.getElementById("rsHodoEmpty").textContent="O hodógrafo será desenhado quando houver direção e velocidade do vento nos níveis da sondagem.";
+ document.getElementById("rsStatus").textContent="Gráficos limpos. Nenhum dado de sondagem está carregado.";
+ const a=document.getElementById("rsSkewCanvas").getContext("2d");a.clearRect(0,0,900,760);
+ const b=document.getElementById("rsHodoCanvas").getContext("2d");b.clearRect(0,0,520,520);
+}
+function parseRadiosondeText(raw){
+ const rows=[];
+ const lines=String(raw||"").split(/\r?\n/);
+ for(const line of lines){
+  const t=line.trim().split(/\s+/);
+  if(t.length<7)continue;
+  const p=Number(t[0]),z=Number(t[1]),temp=Number(t[2]),dew=Number(t[3]),rh=Number(t[4]),dir=Number(t[6]),speed=Number(t[7]);
+  if(!Number.isFinite(p)||p<1||p>1100||!Number.isFinite(temp)||temp<-120||temp>65)continue;
+  rows.push({p,z:Number.isFinite(z)?z:null,temp,dew:Number.isFinite(dew)&&dew>-150?dew:null,rh:Number.isFinite(rh)?rh:null,dir:Number.isFinite(dir)?dir:null,speed:Number.isFinite(speed)?speed:null});
+ }
+ const unique=new Map();rows.forEach(r=>unique.set(r.p,r));
+ return [...unique.values()].sort((a,b)=>b.p-a.p);
+}
+function plotRadiosondeText(){
+ const raw=document.getElementById("rsRawText").value;
+ const rows=parseRadiosondeText(raw);
+ const status=document.getElementById("rsStatus");
+ if(rows.length<4){status.className="rs-status";status.textContent="Não encontrei níveis suficientes. Cole o conteúdo completo da saída Text: List, incluindo as linhas numéricas com PRES, HGHT, TEMP, DWPT, RELH, DRCT e SKNT.";return;}
+ drawSkewT(rows);
+ drawHodograph(rows);
+ renderRadiosondeTable(rows);
+ const top=rows[rows.length-1],surface=rows[0];
+ document.getElementById("rsMetrics").innerHTML=
+  `<div class="rs-metric"><b>NÍVEIS LIDOS</b><span>${rows.length}</span></div>
+   <div class="rs-metric"><b>PRESSÃO MÍNIMA</b><span>${top.p.toFixed(1)} hPa</span></div>
+   <div class="rs-metric"><b>TEMP. NO NÍVEL MAIS BAIXO</b><span>${surface.temp.toFixed(1)} °C</span></div>
+   <div class="rs-metric"><b>ALTITUDE MÁX. INFORMADA</b><span>${top.z===null?"—":Math.round(top.z)+" m"}</span></div>`;
+ status.className="rs-status good";
+ status.textContent=`Diagrama gerado com ${rows.length} níveis observados. Estação WMO ${document.getElementById("rsStation").value} · ${document.getElementById("rsDate").value||"data não informada"} · ${document.getElementById("rsHour").value}Z. Valores derivados diretamente do texto colado; sem cálculo de CAPE/LCL nesta versão.`;
+ document.getElementById("rsSkewEmpty").style.display="none";
+ document.getElementById("rsHodoEmpty").style.display="none";
+ document.getElementById("rsTableWrap").hidden=false;
+}
+function drawSkewT(rows){
+ const c=document.getElementById("rsSkewCanvas"),ctx=c.getContext("2d"),W=c.width,H=c.height;
+ ctx.clearRect(0,0,W,H);ctx.fillStyle="#fff";ctx.fillRect(0,0,W,H);
+ const L=85,R=35,T=35,B=65,pmin=100,pmax=1050,tmin=-90,tmax=50,skew=28;
+ const x=(temp,p)=>L+((temp+skew*Math.log(1000/p)-tmin)/(tmax-tmin))*(W-L-R);
+ const y=p=>T+(Math.log(pmax)-Math.log(p))/(Math.log(pmax)-Math.log(pmin))*(H-T-B);
+ ctx.font="15px Arial";ctx.fillStyle="#29415d";ctx.textAlign="center";ctx.fillText("Pressão (hPa) × Temperatura (°C)",W/2,22);
+ // Isóbaras
+ [1000,925,850,700,600,500,400,300,250,200,150,100].forEach(p=>{
+  const yy=y(p);ctx.strokeStyle="#d8e1eb";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(L,yy);ctx.lineTo(W-R,yy);ctx.stroke();
+  ctx.fillStyle="#526a83";ctx.textAlign="right";ctx.font="13px Arial";ctx.fillText(String(p),L-10,yy+4);
+ });
+ // Isotermas oblíquas
+ for(let temp=-80;temp<=50;temp+=10){
+  ctx.beginPath();ctx.strokeStyle=temp===0?"#aab8c8":"#e7edf3";ctx.lineWidth=temp===0?2:1;
+  for(let p=1050;p>=100;p-=10){const xx=x(temp,p),yy=y(p);if(p===1050)ctx.moveTo(xx,yy);else ctx.lineTo(xx,yy);}
+  ctx.stroke();
+  const xx=x(temp,1000);ctx.fillStyle="#526a83";ctx.textAlign="center";ctx.font="12px Arial";ctx.fillText(String(temp),xx,H-B+22);
+ }
+ // Moldura
+ ctx.strokeStyle="#7890a8";ctx.lineWidth=2;ctx.strokeRect(L,T,W-L-R,H-T-B);
+ function trace(key,color){
+  ctx.beginPath();ctx.strokeStyle=color;ctx.lineWidth=4;ctx.lineJoin="round";let started=false;
+  rows.forEach(r=>{const value=r[key];if(value===null||!Number.isFinite(value)){started=false;return;}const xx=x(value,r.p),yy=y(r.p);if(!started){ctx.moveTo(xx,yy);started=true;}else ctx.lineTo(xx,yy);});
+  ctx.stroke();
+ }
+ trace("temp","#e33c3c");trace("dew","#159b67");
+ ctx.font="bold 14px Arial";ctx.textAlign="left";ctx.fillStyle="#e33c3c";ctx.fillText("T",W-62,55);ctx.fillStyle="#159b67";ctx.fillText("Td",W-62,76);
+ ctx.font="12px Arial";ctx.fillStyle="#526a83";ctx.textAlign="center";ctx.fillText("Temperatura (°C)",(L+W-R)/2,H-15);
+}
+function drawHodograph(rows){
+ const c=document.getElementById("rsHodoCanvas"),ctx=c.getContext("2d"),W=c.width,H=c.height;
+ ctx.clearRect(0,0,W,H);ctx.fillStyle="#fff";ctx.fillRect(0,0,W,H);
+ const cx=W/2,cy=H/2+5,scale=3.1;
+ ctx.font="12px Arial";ctx.fillStyle="#29415d";ctx.textAlign="center";ctx.fillText("U (kt) →",cx,20);
+ [10,20,30,40,50,60].forEach(v=>{ctx.beginPath();ctx.strokeStyle="#e1e8ef";ctx.lineWidth=1;ctx.arc(cx,cy,v*scale,0,Math.PI*2);ctx.stroke();ctx.fillStyle="#75879a";ctx.fillText(String(v),cx+v*scale-8,cy-4);});
+ ctx.beginPath();ctx.strokeStyle="#a9b8c8";ctx.moveTo(30,cy);ctx.lineTo(W-30,cy);ctx.moveTo(cx,35);ctx.lineTo(cx,H-35);ctx.stroke();
+ const pts=rows.filter(r=>r.dir!==null&&r.speed!==null).map(r=>{const rad=r.dir*Math.PI/180;return{x:cx+(-r.speed*Math.sin(rad))*scale,y:cy-(-r.speed*Math.cos(rad))*scale,z:r.z,p:r.p};});
+ if(pts.length){
+  ctx.beginPath();ctx.strokeStyle="#2778c7";ctx.lineWidth=3;pts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.stroke();
+  pts.forEach((p,i)=>{ctx.beginPath();ctx.fillStyle=i===0?"#e34b4b":"#2778c7";ctx.arc(p.x,p.y,5,0,Math.PI*2);ctx.fill();});
+  const last=pts[pts.length-1];ctx.font="12px Arial";ctx.fillStyle="#29415d";ctx.textAlign="left";ctx.fillText("Topo",Math.min(W-50,last.x+8),Math.max(38,last.y-7));
+ }else{ctx.font="13px Arial";ctx.fillStyle="#8293a8";ctx.textAlign="center";ctx.fillText("Sem dados de vento no texto",cx,cy);}
+ ctx.font="11px Arial";ctx.fillStyle="#526a83";ctx.textAlign="center";ctx.fillText("V (kt)",cx,H-14);
+}
+function renderRadiosondeTable(rows){
+ const body=document.getElementById("rsTableBody");
+ body.innerHTML=rows.map(r=>`<tr><td>${r.p.toFixed(1)}</td><td>${r.z===null?"—":r.z.toFixed(0)}</td><td>${r.temp.toFixed(1)}</td><td>${r.dew===null?"—":r.dew.toFixed(1)}</td><td>${r.rh===null?"—":r.rh.toFixed(0)}</td><td>${r.dir===null?"—":r.dir.toFixed(0)}</td><td>${r.speed===null?"—":r.speed.toFixed(1)}</td></tr>`).join("");
+}
+// Data vazia significa buscar a última sondagem disponível.
+
+
+// Consulta automática da NOAA/IGRA. O arquivo oficial é texto fixo compactado em ZIP;
+// os níveis são convertidos para unidades meteorológicas e podem ser exportados em CSV.
+let rsLoadedRows=[];
+let rsLoadedMeta=null;
+async function loadJSZipLibrary(){
+ if(window.JSZip)return window.JSZip;
+ await new Promise((resolve,reject)=>{
+  const script=document.createElement("script");
+  script.src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js";
+  script.onload=resolve;script.onerror=()=>reject(new Error("Não foi possível carregar o leitor ZIP."));
+  document.head.appendChild(script);
+ });
+ if(!window.JSZip)throw new Error("Biblioteca ZIP indisponível.");
+ return window.JSZip;
+}
+function rsValidNumber(raw,scale=1){
+ const n=Number(String(raw||"").trim());
+ return Number.isFinite(n)&&n!==-9999&&n!==-8888&&n>-9000?n/scale:null;
+}
+function parseIGRAStationFile(text,stationId){
+ const lines=String(text||"").split(/\r?\n/);
+ const soundings=[];
+ let current=null;
+ for(const line of lines){
+  if(line.startsWith("#")){
+   if(current&&current.rows.length)soundings.push(current);
+   const id=line.slice(1,12).trim();
+   if(id!==stationId){current=null;continue;}
+   current={
+    id,year:Number(line.slice(13,17)),month:Number(line.slice(18,20)),
+    day:Number(line.slice(21,23)),hour:Number(line.slice(24,26)),
+    release:line.slice(27,31).trim(),expected:Number(line.slice(32,36)),
+    rows:[]
+   };
+  }else if(current&&line.trim()){
+   // IGRA2 fixed-width fields: pressure Pa, temperature/depression tenths °C,
+   // RH tenths %, wind speed tenths m/s.
+   const p=rsValidNumber(line.slice(9,15),100);
+   const z=rsValidNumber(line.slice(16,21),1);
+   const temp=rsValidNumber(line.slice(22,27),10);
+   const rh=rsValidNumber(line.slice(28,33),10);
+   const dpdp=rsValidNumber(line.slice(34,39),10);
+   const dir=rsValidNumber(line.slice(40,45),1);
+   const speedMS=rsValidNumber(line.slice(46,51),10);
+   if(p!==null&&p>0&&temp!==null){
+    current.rows.push({
+     p,z,temp,dew:dpdp===null?null:temp-dpdp,
+     rh,dir,speed:speedMS===null?null:speedMS*1.943844,
+     speedMS
+    });
+   }
+  }
+ }
+ if(current&&current.rows.length)soundings.push(current);
+ return soundings.filter(s=>s.rows.length>=4);
+}
+async function fetchIGRAStationYear(stationId,year){
+ const url=`https://www.ncei.noaa.gov/data/integrated-global-radiosonde-archive/access/data-y2d/${stationId}-data-beg${year}.txt.zip`;
+ const response=await fetch(url,{cache:"no-store"});
+ if(!response.ok)throw new Error(`NOAA respondeu HTTP ${response.status} para ${year}.`);
+ const blob=await response.blob();
+ const JSZip=await loadJSZipLibrary();
+ const zip=await JSZip.loadAsync(blob);
+ const filename=Object.keys(zip.files).find(n=>n.toLowerCase().endsWith(".txt"));
+ if(!filename)throw new Error("O ZIP da NOAA não contém arquivo TXT.");
+ return await zip.files[filename].async("string");
+}
+function rsStationLabel(){
+ const el=document.getElementById("rsStation");
+ return el?.selectedOptions?.[0]?.textContent||el?.value||"Estação";
+}
+async function fetchLatestRadiosonde(){
+ const btn=document.getElementById("rsFetchBtn");
+ const status=document.getElementById("rsStatus");
+ const stationWMO=document.getElementById("rsStation").value;
+ const stationId="BRM000"+stationWMO;
+ const chosenDate=document.getElementById("rsDate").value;
+ const chosenHour=document.getElementById("rsHour").value;
+ const nowYear=new Date().getUTCFullYear();
+ btn.disabled=true;btn.textContent="CONSULTANDO NOAA…";
+ status.className="rs-status";status.textContent="Baixando o arquivo da NOAA/IGRA e procurando a sondagem solicitada…";
+ try{
+  let soundings=[],usedYear=null,lastError=null;
+  const years=chosenDate?[Number(chosenDate.slice(0,4))]:[nowYear,nowYear-1];
+  for(const year of years){
+   try{
+    const txt=await fetchIGRAStationYear(stationId,year);
+    soundings=parseIGRAStationFile(txt,stationId);
+    usedYear=year;
+    if(soundings.length)break;
+   }catch(err){lastError=err;}
+  }
+  if(!soundings.length)throw lastError||new Error("Não há sondagens disponíveis para essa estação no arquivo recente da NOAA.");
+  let matches=soundings;
+  if(chosenDate){
+   matches=matches.filter(s=>`${s.year}-${String(s.month).padStart(2,"0")}-${String(s.day).padStart(2,"0")}`===chosenDate);
+  }
+  if(chosenHour!=="all")matches=matches.filter(s=>String(s.hour).padStart(2,"0")===chosenHour);
+  if(!matches.length)throw new Error("Não encontrei sondagem para essa data/horário. Apague a data para buscar a última disponível ou escolha outro horário.");
+  matches.sort((a,b)=>new Date(Date.UTC(b.year,b.month-1,b.day,b.hour))-new Date(Date.UTC(a.year,a.month-1,a.day,a.hour)));
+  const selected=matches[matches.length-1];
+  // A lista foi ordenada de mais recente para mais antiga? Corrige seleção explicitamente.
+  const latest=matches.reduce((a,b)=>new Date(Date.UTC(a.year,a.month-1,a.day,a.hour))>=new Date(Date.UTC(b.year,b.month-1,b.day,b.hour))?a:b);
+  rsLoadedRows=latest.rows;
+  rsLoadedMeta={...latest,stationId,stationWMO,stationLabel:rsStationLabel(),source:"NOAA IGRA 2.2",fileYear:usedYear};
+  drawSkewT(rsLoadedRows);drawHodograph(rsLoadedRows);renderRadiosondeTable(rsLoadedRows);
+  const surface=rsLoadedRows[0],top=rsLoadedRows[rsLoadedRows.length-1];
+  document.getElementById("rsMetrics").innerHTML=
+   `<div class="rs-metric"><b>NÍVEIS LIDOS</b><span>${rsLoadedRows.length}</span></div>
+    <div class="rs-metric"><b>PRESSÃO MÍNIMA</b><span>${top.p.toFixed(1)} hPa</span></div>
+    <div class="rs-metric"><b>TEMP. NO NÍVEL MAIS BAIXO</b><span>${surface.temp.toFixed(1)} °C</span></div>
+    <div class="rs-metric"><b>ALTITUDE MÁX. INFORMADA</b><span>${top.z===null?"—":Math.round(top.z)+" m"}</span></div>`;
+  document.getElementById("rsSkewEmpty").style.display="none";
+  document.getElementById("rsHodoEmpty").style.display="none";
+  document.getElementById("rsTableWrap").hidden=false;
+  status.className="rs-status good";
+  status.textContent=`Sondagem carregada automaticamente da NOAA/IGRA: ${rsLoadedMeta.stationLabel} · ${latest.year}-${String(latest.month).padStart(2,"0")}-${String(latest.day).padStart(2,"0")} às ${String(latest.hour).padStart(2,"0")}Z · ${rsLoadedRows.length} níveis. O IGRA é atualizado diariamente; os dados mais recentes podem ter atraso de até cerca de dois dias.`;
+ }catch(err){
+  status.className="rs-status";
+  status.textContent=`Não foi possível carregar a sondagem: ${err.message} Se o navegador bloquear o acesso à NOAA, será necessário liberar CORS por um proxy/Edge Function; não foi desenhado nenhum perfil fictício.`;
+ }finally{
+  btn.disabled=false;btn.textContent="BUSCAR SONDAGEM AUTOMATICAMENTE";
+ }
+}
+function downloadRadiosondeCSV(){
+ if(!rsLoadedRows.length||!rsLoadedMeta){document.getElementById("rsStatus").textContent="Carregue uma sondagem antes de baixar o CSV.";return;}
+ const headers=["station_id","station_name","date_utc","hour_utc","pressure_hpa","height_m","temperature_c","dewpoint_c","relative_humidity_pct","wind_direction_deg","wind_speed_kt","wind_speed_ms"];
+ const date=`${rsLoadedMeta.year}-${String(rsLoadedMeta.month).padStart(2,"0")}-${String(rsLoadedMeta.day).padStart(2,"0")}`;
+ const lines=[headers.join(",")];
+ rsLoadedRows.forEach(r=>lines.push([
+  rsLoadedMeta.stationId,`"${String(rsLoadedMeta.stationLabel).replace(/"/g,'""')}"`,date,
+  rsLoadedMeta.hour,r.p,r.z??"",r.temp,r.dew??"",r.rh??"",r.dir??"",r.speed??"",r.speedMS??""
+ ].join(",")));
+ const blob=new Blob(["\uFEFF"+lines.join("\r\n")],{type:"text/csv;charset=utf-8"});
+ const url=URL.createObjectURL(blob),a=document.createElement("a");
+ a.href=url;a.download=`CLOUDGOD_radiossondagem_${rsLoadedMeta.stationWMO}_${date}_${String(rsLoadedMeta.hour).padStart(2,"0")}Z.csv`;
+ document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+}
+clearRadiosonde=function(){
+ rsLoadedRows=[];rsLoadedMeta=null;
+ document.getElementById("rsTableWrap").hidden=true;
+ document.getElementById("rsTableBody").innerHTML="";
+ document.getElementById("rsMetrics").innerHTML='<div class="rs-metric"><b>NÍVEIS LIDOS</b><span>—</span></div><div class="rs-metric"><b>PRESSÃO MÍNIMA</b><span>—</span></div><div class="rs-metric"><b>TEMP. NO NÍVEL MAIS BAIXO</b><span>—</span></div><div class="rs-metric"><b>TOPO DO PERFIL</b><span>—</span></div>';
+ document.getElementById("rsSkewEmpty").style.display="block";
+ document.getElementById("rsHodoEmpty").style.display="block";
+ document.getElementById("rsSkewEmpty").textContent="Aguardando dados automáticos da NOAA/IGRA.";
+ document.getElementById("rsHodoEmpty").textContent="O hodógrafo será exibido após carregar uma sondagem.";
+ document.getElementById("rsStatus").textContent="Gráficos limpos. Clique em buscar sondagem automaticamente.";
+ document.getElementById("rsSkewCanvas").getContext("2d").clearRect(0,0,900,760);
+ document.getElementById("rsHodoCanvas").getContext("2d").clearRect(0,0,520,520);
+};
 
 </script>
 </body>
