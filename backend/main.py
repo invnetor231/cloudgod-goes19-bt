@@ -80,25 +80,29 @@ def latest_c13_key():
 
 
 def color_enhanced(bt):
-    # Realce térmico próprio. A entrada é BT física em Kelvin.
-    stops = np.array([
-        [185.0, 255, 255, 255], [190.0, 245, 190, 255],
-        [195.0, 190, 80, 220], [200.0, 110, 35, 190],
-        [205.0, 55, 35, 160], [210.0, 35, 75, 190],
-        [215.0, 35, 145, 220], [220.0, 45, 200, 210],
-        [225.0, 55, 180, 125], [230.0, 150, 205, 65],
-        [235.0, 235, 220, 55], [240.0, 245, 155, 40],
-        [245.0, 220, 75, 35], [250.0, 170, 35, 45],
-        [260.0, 105, 25, 35], [270.0, 55, 25, 30],
-        [280.0, 30, 25, 30], [290.0, 20, 20, 25],
-        [300.0, 12, 14, 20], [315.0, 5, 8, 12],
-    ], dtype=np.float32)
-    values = np.clip(bt, stops[0, 0], stops[-1, 0])
-    rgb = np.stack(
-        [np.interp(values, stops[:, 0], stops[:, channel]) for channel in (1, 2, 3)],
-        axis=-1,
+    """
+    Infravermelho de onda longa em escala de cinza,
+    inspirado na apresentação visual do Himawari.
+    Entrada: temperatura de brilho em Kelvin.
+    """
+    bt = np.asarray(bt, dtype=np.float32)
+
+    # Faixa térmica de realce: nuvens frias ficam claras e
+    # superfícies/regiões quentes ficam escuras.
+    cold = 190.0
+    warm = 310.0
+
+    normalized = np.clip(
+        (warm - bt) / (warm - cold),
+        0.0,
+        1.0
     )
-    return np.clip(rgb, 0, 255).astype(np.uint8)
+
+    # Contraste suave para destacar os topos de nuvens frios.
+    enhanced = np.power(normalized, 0.78)
+    gray = np.clip(enhanced * 255.0, 0, 255).astype(np.uint8)
+
+    return np.stack([gray, gray, gray], axis=-1)
 
 
 def make_png():
@@ -235,7 +239,7 @@ def metadata():
             "satellite": "GOES-19", "band": 13, "wavelength_um": 10.3,
             "product": "ABI-L2-CMIPF-M6C13", "variable": "CMI", "units": "K",
             "scan_time": item["scan"], "source_file": item["key"],
-            "enhancement": "CLOUDGOD Color Enhanced IR",
+            "enhancement": "Longwave Infrared Grayscale - Himawari Style",
             "bounds": SOUTH_AMERICA,
             "image_size": [WIDTH, HEIGHT],
             "cache_age_seconds": round(time.time() - item["at"], 1),
